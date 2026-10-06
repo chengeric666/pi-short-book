@@ -2,7 +2,10 @@
 
 Interactive single-file Chinese short book on Pi 1.0 + Pi Durable.
 
-- Live V2: https://chengeric666.github.io/pi-short-book/
-- Live V1: https://chengeric666.github.io/pi-short-book/v1/
+GitHub Pages publishes the `main` branch site root. Earlier editions stay in place.
 
-V2 is the current book at the site root. V1 remains available at `v1/` so the previous edition stays reachable.
+- V3（正式书，当前版）：https://chengeric666.github.io/pi-short-book/
+- V2（机制深读）：https://chengeric666.github.io/pi-short-book/v2/
+- V1（决策简报）：https://chengeric666.github.io/pi-short-book/v1/
+
+The same V3 file is also mirrored at https://chengeric666.github.io/pi-short-book/v3/
