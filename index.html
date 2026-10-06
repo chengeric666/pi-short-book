@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Pi，持久地：最小智能体运行框架在做什么，以及你的公司是否该用它</title>
-<meta name="description" content="面向企业采纳决策的 Pi 1.0 与 Pi Durable 简明互动读本（简体中文）。"/>
+<title>Pi，持久地 · V2 机制深读：它在跑什么循环，以及 Durable 为何奏效</title>
+<meta name="description" content="Pi 1.0 与 Pi Durable 机制深读短书 V2。面向公司采纳决策；从可观察现象剥到提交与重放；版本锚定 1.0.4。"/>
 <style>
-
 :root {
   --bg: #fafafa;
   --bg-elev: #ffffff;
@@ -26,7 +25,7 @@
   --danger: #c41e3a;
   --danger-bg: #fdecee;
   --code-bg: #f5f5f7;
-  --sidebar-w: 280px;
+  --sidebar-w: 290px;
   --radius: 12px;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
   --font: "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
@@ -39,7 +38,7 @@ body {
   margin: 0;
   font-family: var(--font);
   font-size: 17px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -54,7 +53,7 @@ pre {
   border-radius: 10px;
   padding: 14px 16px;
   overflow-x: auto;
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.55;
 }
 .layout { display: flex; min-height: 100vh; }
@@ -63,51 +62,44 @@ pre {
   width: var(--sidebar-w); height: 100vh;
   background: var(--bg-elev);
   border-right: 1px solid var(--line-soft);
-  padding: 24px 18px 32px;
+  padding: 20px 14px 32px;
   overflow-y: auto;
   flex-shrink: 0;
   z-index: 20;
 }
 .sidebar .brand {
-  font-size: 13px; font-weight: 600; letter-spacing: .02em;
-  color: var(--text-2); text-transform: uppercase; margin-bottom: 6px;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  color: var(--accent); margin-bottom: 4px;
 }
 .sidebar h1 {
   font-family: var(--font-display);
-  font-size: 18px; font-weight: 600; line-height: 1.35;
-  margin: 0 0 18px; color: var(--text);
+  font-size: 17px; font-weight: 600; line-height: 1.35;
+  margin: 0 0 10px; color: var(--text);
 }
-.progress-wrap { margin-bottom: 18px; }
+.v1-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; margin-bottom: 14px;
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--code-bg); border: 1px solid var(--line-soft);
+  color: var(--text-2); text-decoration: none;
+}
+.v1-link:hover { background: var(--accent-soft); color: var(--accent); text-decoration: none; }
+.progress-wrap { margin-bottom: 14px; }
 .progress-label { font-size: 12px; color: var(--text-3); margin-bottom: 6px; display: flex; justify-content: space-between; }
-.progress-bar {
-  height: 4px; background: var(--line-soft); border-radius: 99px; overflow: hidden;
-}
-.progress-bar > i {
-  display: block; height: 100%; width: 0%;
-  background: var(--accent); border-radius: 99px; transition: width .2s ease;
-}
+.progress-bar { height: 4px; background: var(--line-soft); border-radius: 99px; overflow: hidden; }
+.progress-bar > i { display: block; height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width .2s ease; }
 .toc { list-style: none; padding: 0; margin: 0; }
 .toc a {
-  display: block; padding: 7px 10px; margin: 2px 0;
-  border-radius: 8px; color: var(--text-2); font-size: 13.5px; line-height: 1.4;
+  display: block; padding: 6px 8px; margin: 1px 0;
+  border-radius: 8px; color: var(--text-2); font-size: 12.5px; line-height: 1.35;
   text-decoration: none; border-left: 2px solid transparent;
 }
 .toc a:hover { background: var(--code-bg); color: var(--text); }
-.toc a.active {
-  background: var(--accent-soft); color: var(--accent);
-  border-left-color: var(--accent); font-weight: 600;
-}
-.toc .toc-sub { padding-left: 10px; }
-.toc .toc-sub a { font-size: 12.5px; padding: 5px 10px; }
-.main {
-  flex: 1; min-width: 0;
-  max-width: 820px;
-  margin: 0 auto;
-  padding: 48px 40px 120px;
-}
+.toc a.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.main { flex: 1; min-width: 0; max-width: 820px; margin: 0 auto; padding: 40px 36px 120px; }
 @media (max-width: 980px) {
   .sidebar { display: none; }
-  .main { padding: 32px 20px 80px; }
+  .main { padding: 28px 18px 80px; }
   .mobile-toc-btn { display: inline-flex !important; }
 }
 .mobile-toc-btn {
@@ -115,59 +107,46 @@ pre {
   background: var(--text); color: #fff; border: 0; border-radius: 999px;
   padding: 12px 18px; font: 600 13px var(--font); box-shadow: var(--shadow); cursor: pointer;
 }
-.hero {
-  margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--line-soft);
-}
-.hero .eyebrow {
-  font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: .04em;
-  text-transform: uppercase; margin-bottom: 12px;
-}
+.hero { margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--line-soft); }
+.hero .eyebrow { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .04em; margin-bottom: 10px; }
 .hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 40px);
-  font-weight: 600; line-height: 1.25; margin: 0 0 16px; letter-spacing: -0.02em;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 600; line-height: 1.28; margin: 0 0 14px; letter-spacing: -0.02em;
 }
-.hero .deck {
-  font-size: 18px; color: var(--text-2); line-height: 1.6; margin: 0 0 20px;
-}
-.meta {
-  display: flex; flex-wrap: wrap; gap: 10px 18px;
-  font-size: 13px; color: var(--text-3);
-}
-.meta span { display: inline-flex; align-items: center; gap: 6px; }
+.hero .deck { font-size: 17.5px; color: var(--text-2); line-height: 1.65; margin: 0 0 18px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--text-3); }
 .chip {
   display: inline-block; padding: 2px 8px; border-radius: 6px;
   background: var(--code-bg); border: 1px solid var(--line-soft);
   font-size: 12px; color: var(--text-2);
 }
-chapter, .chapter { display: block; margin: 56px 0 0; scroll-margin-top: 24px; }
+.chapter { display: block; margin: 52px 0 0; scroll-margin-top: 24px; }
 .chapter h2 {
   font-family: var(--font-display);
-  font-size: 28px; font-weight: 600; letter-spacing: -0.02em;
-  margin: 0 0 8px; padding-top: 8px;
+  font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
+  margin: 0 0 8px; padding-top: 6px;
 }
 .chapter .ch-num {
-  font-size: 13px; font-weight: 600; color: var(--accent);
-  letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px;
+  font-size: 12.5px; font-weight: 700; color: var(--accent);
+  letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px;
 }
-.chapter h3 {
-  font-size: 20px; font-weight: 600; margin: 32px 0 10px; letter-spacing: -0.01em;
-}
-.chapter h4 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; }
-.chapter p { margin: 0 0 1.05em; }
-.chapter ul, .chapter ol { margin: 0 0 1.1em; padding-left: 1.4em; }
-.chapter li { margin: 0.35em 0; }
+.chapter h3 { font-size: 19px; font-weight: 600; margin: 30px 0 10px; letter-spacing: -0.01em; }
+.chapter h4 { font-size: 16px; font-weight: 600; margin: 22px 0 8px; }
+.chapter p { margin: 0 0 1.1em; }
+.chapter ul, .chapter ol { margin: 0 0 1.15em; padding-left: 1.35em; }
+.chapter li { margin: 0.4em 0; }
 .lede {
-  font-size: 18.5px; color: var(--text); line-height: 1.65;
-  border-left: 3px solid var(--accent); padding-left: 16px; margin: 18px 0 24px;
+  font-size: 18px; color: var(--text); line-height: 1.68;
+  border-left: 3px solid var(--accent); padding-left: 16px; margin: 16px 0 22px;
 }
 .why {
   background: var(--accent-soft); border-radius: var(--radius);
-  padding: 16px 18px; margin: 20px 0 28px;
+  padding: 16px 18px; margin: 18px 0 26px;
 }
 .why strong { color: var(--accent); }
 .callout {
-  border-radius: var(--radius); padding: 14px 16px; margin: 18px 0 24px;
+  border-radius: var(--radius); padding: 14px 16px; margin: 16px 0 22px;
   border: 1px solid var(--line-soft);
 }
 .callout.warn { background: var(--warn-bg); border-color: #f0c9a8; }
@@ -175,7 +154,6 @@ chapter, .chapter { display: block; margin: 56px 0 0; scroll-margin-top: 24px; }
 .callout.note { background: var(--code-bg); }
 .callout.danger { background: var(--danger-bg); border-color: #f0b8c0; }
 .callout .label {
-  font-family: var(--font);
   font-size: 12px; font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; margin-bottom: 6px;
 }
@@ -185,16 +163,13 @@ chapter, .chapter { display: block; margin: 56px 0 0; scroll-margin-top: 24px; }
 .callout.note .label { color: var(--text-2); }
 .callout p { margin: 0; font-size: 14.5px; line-height: 1.55; }
 .callout p + p { margin-top: 8px; }
-/* STE style for captions / checklists / warnings */
-.ste, .fig-cap, .checklist, .callout.warn p, .callout.caution p, .callout.danger p {
-  font-size: 14px; line-height: 1.5;
-}
+.ste, .fig-cap, .checklist { font-size: 14px; line-height: 1.5; }
 .fig {
   background: var(--bg-elev);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  margin: 28px 0 36px;
+  margin: 26px 0 34px;
   overflow: hidden;
 }
 .fig-head {
@@ -212,24 +187,15 @@ chapter, .chapter { display: block; margin: 56px 0 0; scroll-margin-top: 24px; }
 }
 .fig-cap .src { display: block; margin-top: 6px; font-size: 12px; color: var(--text-3); }
 .fig svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-.table-wrap { overflow-x: auto; margin: 18px 0 28px; border: 1px solid var(--line-soft); border-radius: 10px; }
-table {
-  width: 100%; border-collapse: collapse; font-size: 14.5px;
-  background: var(--bg-elev);
-}
-th, td {
-  text-align: left; padding: 10px 12px;
-  border-bottom: 1px solid var(--line-soft); vertical-align: top;
-}
+.table-wrap { overflow-x: auto; margin: 16px 0 26px; border: 1px solid var(--line-soft); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--bg-elev); }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
 th { background: var(--code-bg); font-weight: 600; font-size: 13px; color: var(--text-2); }
 tr:last-child td { border-bottom: 0; }
-.checklist {
-  list-style: none; padding: 0; margin: 12px 0 0;
-}
+.checklist { list-style: none; padding: 0; margin: 12px 0 0; }
 .checklist li {
   display: flex; gap: 10px; align-items: flex-start;
-  padding: 8px 0; border-bottom: 1px solid var(--line-soft);
-  margin: 0;
+  padding: 8px 0; border-bottom: 1px solid var(--line-soft); margin: 0;
 }
 .checklist li:last-child { border-bottom: 0; }
 .checklist input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
@@ -244,6 +210,7 @@ button.btn:hover { background: var(--code-bg); }
 button.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 button.btn.primary:hover { filter: brightness(1.05); }
 button.btn:disabled { opacity: .45; cursor: not-allowed; }
+button.btn.active-tog { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .slider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0 4px; }
 .slider-row input[type=range] { flex: 1; accent-color: var(--accent); }
 .status-pill {
@@ -260,27 +227,73 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
 }
 .score-num { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; color: var(--accent); line-height: 1; }
 .score-msg { font-size: 14px; color: var(--text-2); }
-.matrix {
-  display: grid; grid-template-columns: 80px repeat(3, 1fr);
-  gap: 6px; font-size: 12.5px;
-}
-.matrix .cell {
-  background: var(--code-bg); border-radius: 8px; padding: 10px 8px; text-align: center;
-  border: 1px solid var(--line-soft); min-height: 52px; display: flex; align-items: center; justify-content: center;
-}
-.matrix .hdr { font-weight: 700; background: transparent; border: 0; color: var(--text-2); }
-.matrix .rowh { font-weight: 600; background: transparent; border: 0; justify-content: flex-end; padding-right: 4px; }
-.matrix .hi { background: #d8f0e0; border-color: #b7e0c4; }
-.matrix .mid { background: #fff3d1; border-color: #f0dfa0; }
-.matrix .lo { background: #fde8ea; border-color: #f0c0c6; }
 .tree-node {
   border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 8px 0;
   background: var(--bg-elev);
 }
 .tree-node.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .tree-q { font-weight: 600; margin-bottom: 8px; }
-.sources ol { padding-left: 1.3em; }
-.sources li { margin: 0.45em 0; font-size: 14.5px; }
+.step-log {
+  font-family: var(--font-mono); font-size: 12.5px;
+  background: #1d1d1f; color: #e8e8ed; border-radius: 10px;
+  padding: 12px 14px; min-height: 150px; max-height: 280px; overflow-y: auto;
+  line-height: 1.5;
+}
+.step-log .dim { color: #86868b; }
+.step-log .ok { color: #6ddf8c; }
+.step-log .bad { color: #ff7b8a; }
+.step-log .hi { color: #7eb6ff; }
+.step-log .warn { color: #ffc266; }
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 640px) { .cmp-grid { grid-template-columns: 1fr; } }
+.cmp-card {
+  border: 1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px; background: var(--bg-elev);
+}
+.cmp-card h5 { margin: 0 0 6px; font-size: 14px; }
+.cmp-card p { margin: 0; font-size: 13px; color: var(--text-2); }
+.cmp-card.bad { background: var(--danger-bg); border-color: #f0b8c0; }
+.cmp-card.good { background: var(--ok-bg); border-color: #b7e0c4; }
+.commit-list { list-style: none; padding: 0; margin: 0; max-height: 320px; overflow-y: auto; }
+.commit-list li {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 10px; margin: 3px 0; border-radius: 8px;
+  border: 1px solid transparent; cursor: pointer; font-size: 13px;
+}
+.commit-list li:hover { background: var(--code-bg); }
+.commit-list li.on { background: var(--accent-soft); border-color: #b7d4f5; }
+.commit-list .n {
+  flex-shrink: 0; width: 28px; height: 22px; border-radius: 6px;
+  background: var(--code-bg); text-align: center; font: 700 11px var(--font-mono);
+  line-height: 22px; color: var(--text-2);
+}
+.commit-list li.on .n { background: var(--accent); color: #fff; }
+.commit-detail {
+  margin-top: 10px; padding: 12px 14px; border-radius: 10px;
+  background: var(--code-bg); font-size: 13.5px; line-height: 1.55; min-height: 72px;
+}
+.radio-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.radio-row label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line-soft);
+  background: var(--bg-elev); font-size: 13px; cursor: pointer;
+}
+.radio-row input { accent-color: var(--accent); }
+.state-board {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px; margin: 10px 0;
+}
+.state-cell {
+  border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px 12px;
+  background: var(--bg-elev); font-size: 12.5px;
+}
+.state-cell .k { color: var(--text-3); font-size: 11px; margin-bottom: 4px; }
+.state-cell .v { font-weight: 600; font-family: var(--font-mono); font-size: 12px; word-break: break-all; }
+.state-cell.gone { opacity: .45; background: var(--danger-bg); }
+.state-cell.kept { background: var(--ok-bg); border-color: #b7e0c4; }
+.footnote {
+  font-size: 13px; color: var(--text-3); border-top: 1px dashed var(--line-soft);
+  padding-top: 10px; margin-top: 18px;
+}
 .footer-note {
   margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line-soft);
   font-size: 13px; color: var(--text-3);
@@ -290,734 +303,762 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
   background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px;
   padding: 1px 5px;
 }
-.step-log {
-  font-family: var(--font-mono); font-size: 12.5px;
-  background: #1d1d1f; color: #e8e8ed; border-radius: 10px;
-  padding: 12px 14px; min-height: 140px; max-height: 220px; overflow-y: auto;
-  line-height: 1.45;
+.matrix { display: grid; grid-template-columns: 90px repeat(3, 1fr); gap: 6px; font-size: 12.5px; }
+.matrix .cell {
+  background: var(--code-bg); border-radius: 8px; padding: 10px 8px; text-align: center;
+  border: 1px solid var(--line-soft); min-height: 52px; display: flex; align-items: center; justify-content: center;
 }
-.step-log .dim { color: #86868b; }
-.step-log .ok { color: #6ddf8c; }
-.step-log .bad { color: #ff7b8a; }
-.step-log .hi { color: #7eb6ff; }
-.cmp-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+.matrix .hdr { font-weight: 700; background: transparent; border: 0; color: var(--text-2); }
+.matrix .rowh { font-weight: 600; background: transparent; border: 0; justify-content: flex-end; padding-right: 4px; }
+.matrix .hi { background: #d8f0e0; border-color: #b7e0c4; }
+.matrix .mid { background: #fff3d1; border-color: #f0dfa0; }
+.matrix .lo { background: #fde8ea; border-color: #f0c0c6; }
+.sources ol { padding-left: 1.3em; }
+.sources li { margin: 0.45em 0; font-size: 14.5px; }
+.top-bar-v {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-bottom: 8px;
 }
-@media (max-width: 640px) { .cmp-grid { grid-template-columns: 1fr; } }
-.cmp-card {
-  border: 1px solid var(--line-soft); border-radius: 10px; padding: 12px 14px; background: var(--bg-elev);
-}
-.cmp-card h5 { margin: 0 0 6px; font-size: 14px; }
-.cmp-card p { margin: 0; font-size: 13px; color: var(--text-2); }
-
 </style>
 </head>
 <body>
 <button type="button" class="mobile-toc-btn" id="mobileTocBtn" aria-label="目录">目录</button>
 <div class="layout">
 <aside class="sidebar" id="sidebar" aria-label="目录">
-  <div class="brand">Pi Short Book</div>
+  <div class="brand">V2 · 机制深读</div>
   <h1>Pi，持久地</h1>
+  <a class="v1-link" href="v1/" title="打开 V1 决策简报版">← 查看 V1（决策简报）</a>
   <div class="progress-wrap">
     <div class="progress-label"><span>阅读进度</span><span id="progressPct">0%</span></div>
     <div class="progress-bar"><i id="progressBar"></i></div>
   </div>
   <nav>
     <ul class="toc" id="toc">
-      <li><a href="#ch0">前言</a></li>
-      <li><a href="#ch1">1. 运行框架在做什么</a></li>
-      <li><a href="#ch2">2. Pi 作为最小机器</a></li>
-      <li><a href="#ch3">3. 四种入口</a></li>
-      <li><a href="#ch4">4. 信任与安全</a></li>
-      <li><a href="#ch5">5. 为何终端不够</a></li>
-      <li><a href="#ch6">6. Durable 的一条规则</a></li>
-      <li><a href="#ch7">7. 任务与重放</a></li>
-      <li><a href="#ch8">8. 对话、文档、扩展</a></li>
-      <li><a href="#ch9">9. 存储与部署</a></li>
-      <li><a href="#ch10">10. 成熟度与治理</a></li>
-      <li><a href="#ch11">11. 采纳决策指南</a></li>
-      <li><a href="#sources">资料来源</a></li>
+      <li><a href="#ch0">前言：怎么读</a></li>
+      <li><a href="#ch1">1. 它只是在跑一个循环</a></li>
+      <li><a href="#ch2">2. 一次轮回里发生了什么</a></li>
+      <li><a href="#ch3">3. 会话为什么是树</a></li>
+      <li><a href="#ch4">4. 工具：意图先于执行</a></li>
+      <li><a href="#ch5">5. 扩展是进程内代码</a></li>
+      <li><a href="#ch6">6. 实验：死在工具中途</a></li>
+      <li><a href="#ch7">7. 只有提交后可观察</a></li>
+      <li><a href="#ch8">8. 约十七次提交</a></li>
+      <li><a href="#ch9">9. 副作用三明治与重放</a></li>
+      <li><a href="#ch10">10. 文档、分叉、收件箱</a></li>
+      <li><a href="#ch11">11. 存储与 Cloudflare</a></li>
+      <li><a href="#ch12">12. 真正让它奏效的是什么</a></li>
+      <li><a href="#ch12x">间奏：验收问题</a></li>
+      <li><a href="#ch13">13. 公司采纳</a></li>
+      <li><a href="#ch14">14. 来源与冲突表</a></li>
     </ul>
   </nav>
 </aside>
 <main class="main" id="main">
 
 <header class="hero" id="top">
-  <div class="eyebrow">Company Adoption Brief · Oct 2026</div>
-  <h1>Pi，持久地：最小智能体运行框架在做什么，以及你的公司是否该用它</h1>
-  <p class="deck">这是一份给技术管理者与工程师的简明读本。它从第一性原理说明 Pi 1.0 编码智能体与 Pi Durable 在做什么、为什么这样设计、以及采纳时必须自己补齐什么。</p>
+  <div class="top-bar-v">
+    <span class="eyebrow">V2 · 机制深读 · Oct 2026</span>
+    <a class="chip" href="v1/">查看 V1</a>
+    <span class="chip">Pi 1.0.4</span>
+    <span class="chip">Durable experimental</span>
+  </div>
+  <h1>Pi，持久地：它在跑什么循环，Durable 为何奏效，以及公司该不该上</h1>
+  <p class="deck">这不是决策清单的加长版。它从一次可观察的「读文件」开始，一层层剥开：会话树、工具意图、进程内扩展、崩溃后还剩什么；再进入 Durable 的提交规则、约十七次提交、副作用三明治；最后才谈公司采纳。判断依据写在机制里，不藏在口号里。你可以用它做培训教材，也可以只用其中几张对照实验图做评审材料；无论哪种用法，请保持版本锚定，并在冲突处回到源码。</p>
   <div class="meta">
-    <span>基于仓库 <code>earendil-works/pi</code> · commit <code>28dcce2</code></span>
-    <span>包版本 <span class="chip">1.0.4</span></span>
-    <span>时区 Asia/Shanghai · 2026-10-06</span>
+    <span>仓库 <code>earendil-works/pi</code> · <code>28dcce2</code></span>
+    <span>权威顺序：code / CHANGELOG / 官方文档 / 博客 &gt; 手册</span>
+    <span>Asia/Shanghai · 2026-10-06</span>
   </div>
 </header>
 
 <section class="chapter" id="ch0">
   <div class="ch-num">Preface</div>
   <h2>怎么读这本书</h2>
-  <p class="lede">先看机制，再看为什么它管用，最后再决定是否采用。数字只来自可引用的来源；没有来源的地方，我们只做定性说明。</p>
-  <p>Pi 不是单一产品。它首先是一个 MIT 许可的 TypeScript 单体仓库（monorepo），其中包含编码智能体 CLI、统一模型 API、以及实验性的持久化运行框架 Pi Durable。公司若把「Pi」当成一个黑盒 SaaS，就会误判风险面。</p>
-  <p>正文尽量用短段落、具体例子解释。图注、检查清单与警告框则采用 ASD-STE100 式简明指令风格：短句、主动语态、术语前后一致。代码、路径、标识符与 URL 保持英文。</p>
+  <p class="lede">每一章先给你看一个现象，再告诉你这一步之后系统里多了什么状态。中间会插入对照实验：失败样本、加约束、再变像样。公司决策章故意放在机制之后——若你还没看清「提交」与「副作用」的边界，任何采纳清单都只是安慰。</p>
+  <p>「Pi」不是单一产品。它是一个 MIT 许可的 TypeScript 单体仓库：编码智能体 CLI、统一模型 API、以及实验性的持久化运行库 <code>@earendil-works/pi-durable</code>。把它们当成一个 SaaS 黑盒，就会误判你要自己补齐的治理面。</p>
+  <p>正文用完整叙述句。图注、清单与警告框用短句（ASD-STE100 风格）。代码、路径、包名、URL 保持英文。版本锚定编码智能体与 Durable 包线 <strong>1.0.4</strong>（2026-10-05）；Durable 技术手册覆盖 1.0.3，冲突处标 <code>[manual vs code]</code>。互动控件（步进器、对照切换、决策树、清单计分等）用来复现「失败→加约束→变像样」的阅读节奏；它们不是装饰，而是实验装置。</p>
   <div class="callout note">
-    <div class="label">Source note · 资料说明</div>
-    <p>权威顺序：源码 / CHANGELOG / pi.dev 与 Cloudflare 文档 / Earendil 博客 &gt; 技术手册。Durable 技术手册覆盖 1.0.3；代码为 1.0.4。冲突处会标「source note」。</p>
+    <div class="label">Source note</div>
+    <p>事实主源：RESEARCH-BRIEF.md、MANUAL-ADDENDUM.md、仓库快照。手册为独立整理的二级材料，不是 Earendil 官方出版物。不确定处写「据公开资料未证实」，不编造 API 或数字。</p>
   </div>
 </section>
 
 <section class="chapter" id="ch1">
   <div class="ch-num">Chapter 1</div>
-  <h2>智能体运行框架在做什么</h2>
-  <p class="lede">去掉所有产品包装之后，编码智能体几乎总是同一件事：把用户话交给模型，把模型要的工具调用执行掉，把结果贴回对话，再问模型下一步——直到它不再要工具。</p>
+  <h2>它只是在跑一个循环</h2>
+  <p class="lede">剥掉产品外壳之后，编码智能体几乎总在做同一件事：把用户的话交给模型；若模型要工具，就执行并把结果贴回对话；再问模型下一步——直到它不再要工具。Pi 把这件事做成可替换边界的小循环，而不是一个塞满计划面板与权限弹窗的产品内核。</p>
 
-  <h3>一个最小循环</h3>
-  <p>假设你说：「把 <code>README.md</code> 第一行读出来。」在 Pi 编码智能体里，大致会发生：</p>
-  <ol>
-    <li>会话把你的话写成一条用户消息，并写入会话文件（JSONL）。</li>
-    <li>运行时组装上下文：系统提示词、项目说明文件（如 <code>AGENTS.md</code>）、可用工具描述、近期对话。</li>
-    <li>模型流式返回：它决定调用 <code>read</code>，并给出路径参数。</li>
-    <li>运行时执行工具，得到文件内容，再作为工具结果写回会话。</li>
-    <li>模型看到结果后，用自然语言回答你。若不再需要工具，这一轮结束。</li>
-  </ol>
-  <p>Pi 把「一轮自动工作结束」标成 <code>agent_settled</code>。注意：这与内部某次模型尝试结束的 <code>agent_end</code> 不同。若你的程序要等「模型答完且没有排队工作」，应等待 <code>agent_settled</code>。</p>
-  <p>把这件事想成两层时钟很有帮助。内层时钟是「模型的一次尝试」：请求发出、流式 token 回来、可能触发工具、再进入下一次尝试。外层时钟是「用户的一次 prompt() / 一次交互回合」：其间可能发生多次内层尝试（例如上下文溢出后压缩再试、或 steer 插入后继续）。产品代码若只听 <code>agent_end</code>，会在外层尚未结算时误以为空闲。手册里的一次捕获记录了两轮、29 个会话事件、四次落盘——即便用假模型，事件形状也说明：流式更新远多于「最终答案」事件。</p>
-  <p>这也解释了为什么「智能体框架」容易越长越大。人们不断把产品功能（计划模式、子智能体面板、权限弹窗）塞进循环旁边。Pi 的取舍是反过来的：循环保持小，功能变成可装卸的扩展。代价是：安全与治理不会「附赠」。</p>
+  <h3>可观察现象：你说「读 README 第一行」</h3>
+  <p>先别急着谈架构标签。你在屏幕上能直接看见的，只有几类东西：你的输入、模型吐出的字、偶尔出现的工具调用卡片、以及最终一段像人话的总结。公司评审若从「多智能体编排」之类大词开始，很容易跳过这些可观察对象，也就跳过了真正决定可靠性的状态边界。</p>
+  <p>在终端里输入这句话时，你看见的是流式文字与偶尔闪过的工具调用。系统内部并没有「理解任务」的独立模块。它做的是：把你的输入写成一条用户消息；组装一段上下文（系统提示、项目说明文件、工具描述、近期对话）；调用模型 API；解析返回里的工具调用；执行；再拼回上下文。若模型给出最终自然语言且不再请求工具，外层回合结束。</p>
+  <p>Pi 把「外层回合真正空闲」标成 <code>agent_settled</code>。这与某次内部模型尝试结束的事件不是同一件事。若你的宿主程序要等「没有排队工作、可以接受下一条用户输入」，应等待 <code>agent_settled</code>，而不是某个更早的结束信号。</p>
 
   <div class="fig" id="fig1">
-    <div class="fig-head"><span class="fig-id">图 1</span><h4 class="fig-title">编码智能体的基本循环</h4></div>
+    <div class="fig-head"><span class="fig-id">图 1</span><h4 class="fig-title">最小循环：现象层</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Agent loop sequence">
-  <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0071e3"/></marker>
-  </defs>
-  <rect x="20" y="70" width="110" height="56" rx="10" fill="#e8f1fc" stroke="#0071e3"/>
-  <text x="75" y="95" text-anchor="middle" font-size="13" font-family="system-ui" fill="#1d1d1f">用户</text>
-  <text x="75" y="112" text-anchor="middle" font-size="11" font-family="system-ui" fill="#6e6e73">prompt</text>
-  <rect x="170" y="70" width="130" height="56" rx="10" fill="#fff" stroke="#d2d2d7"/>
-  <text x="235" y="95" text-anchor="middle" font-size="13" font-family="system-ui" fill="#1d1d1f">AgentSession</text>
-  <text x="235" y="112" text-anchor="middle" font-size="11" font-family="system-ui" fill="#6e6e73">组装上下文</text>
-  <rect x="340" y="70" width="120" height="56" rx="10" fill="#fff" stroke="#d2d2d7"/>
-  <text x="400" y="95" text-anchor="middle" font-size="13" font-family="system-ui" fill="#1d1d1f">模型 API</text>
-  <text x="400" y="112" text-anchor="middle" font-size="11" font-family="system-ui" fill="#6e6e73">stream</text>
-  <rect x="500" y="70" width="110" height="56" rx="10" fill="#fff" stroke="#d2d2d7"/>
-  <text x="555" y="95" text-anchor="middle" font-size="13" font-family="system-ui" fill="#1d1d1f">工具</text>
-  <text x="555" y="112" text-anchor="middle" font-size="11" font-family="system-ui" fill="#6e6e73">read/bash/…</text>
-  <rect x="630" y="70" width="70" height="56" rx="10" fill="#eaf7ee" stroke="#1a7f37"/>
-  <text x="665" y="103" text-anchor="middle" font-size="12" font-family="system-ui" fill="#1a7f37">结算</text>
-  <path d="M130,98 H165" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <path d="M300,98 H335" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <path d="M460,98 H495" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <path d="M555,126 V160 H400 V126" fill="none" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="480" y="178" text-anchor="middle" font-size="11" font-family="system-ui" fill="#6e6e73">工具结果写回 → 再问模型（可多轮）</text>
-  <path d="M460,70 C480,30 560,30 610,70" fill="none" stroke="#86868b" stroke-dasharray="4 3" stroke-width="1.2"/>
-  <text x="535" y="28" text-anchor="middle" font-size="11" font-family="system-ui" fill="#86868b">无工具时 → agent_settled</text>
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="最小智能体循环">
+  <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0071e3"/></marker></defs>
+  <rect x="16" y="60" width="100" height="52" rx="10" fill="#e8f1fc" stroke="#0071e3"/>
+  <text x="66" y="90" text-anchor="middle" font-size="13" fill="#1d1d1f">用户</text>
+  <rect x="150" y="60" width="120" height="52" rx="10" fill="#fff" stroke="#d2d2d7"/>
+  <text x="210" y="82" text-anchor="middle" font-size="12" fill="#1d1d1f">组装上下文</text>
+  <text x="210" y="98" text-anchor="middle" font-size="11" fill="#6e6e73">prompt · tools</text>
+  <rect x="304" y="60" width="110" height="52" rx="10" fill="#fff" stroke="#d2d2d7"/>
+  <text x="359" y="90" text-anchor="middle" font-size="13" fill="#1d1d1f">模型</text>
+  <rect x="448" y="60" width="110" height="52" rx="10" fill="#fff" stroke="#d2d2d7"/>
+  <text x="503" y="82" text-anchor="middle" font-size="12" fill="#1d1d1f">工具</text>
+  <text x="503" y="98" text-anchor="middle" font-size="11" fill="#6e6e73">read / bash</text>
+  <rect x="592" y="60" width="110" height="52" rx="10" fill="#eaf7ee" stroke="#1a7f37"/>
+  <text x="647" y="90" text-anchor="middle" font-size="12" fill="#1a7f37">agent_settled</text>
+  <path d="M116,86 H145" stroke="#0071e3" stroke-width="1.5" marker-end="url(#a1)"/>
+  <path d="M270,86 H299" stroke="#0071e3" stroke-width="1.5" marker-end="url(#a1)"/>
+  <path d="M414,86 H443" stroke="#0071e3" stroke-width="1.5" marker-end="url(#a1)"/>
+  <path d="M503,112 V145 H359 V112" fill="none" stroke="#0071e3" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="430" y="168" text-anchor="middle" font-size="11" fill="#6e6e73">工具结果写回 → 再问模型（可多轮）</text>
+  <path d="M414,60 C440,28 560,28 592,60" fill="none" stroke="#86868b" stroke-dasharray="4 3"/>
+  <text x="510" y="24" text-anchor="middle" font-size="11" fill="#86868b">无工具 → 直接结算</text>
 </svg>
     </div>
     <div class="fig-cap">
-      显示从用户提示到工具调用再回到模型的循环。循环在没有更多工具工作时到达 <code>agent_settled</code>。
-      <span class="src">资料来源：docs/how-pi-works.md；Pi Technical Manual §3（agent_settled）。</span>
+      现象层循环。多轮工具后到达 <code>agent_settled</code>。
+      <span class="src">资料：docs/how-pi-works.md；Pi Technical Manual（agent_settled 与 settle-vs-end）。</span>
     </div>
   </div>
 
   <div class="why">
-    <strong>为什么这样管用。</strong> 现代编码模型已经在海量「工具调用格式」上训练过。你不需要一个巨大的产品内核，也能让模型完成读改文件与跑命令。真正难的是：会话如何存、上下文如何裁、扩展如何接、进程挂了怎么办——后面几章就是在拆这些脚手架。
+    <strong>为什么这样管用。</strong> 现代编码模型已经在大量「工具调用格式」上训练过。你不必先造一个巨大的产品内核，也能让模型读改文件、跑命令。真正难的是脚手架：会话怎么存、上下文怎么裁、扩展怎么接、进程挂了进行中的工作怎么办。后面各章就是在剥这些层。
   </div>
+  <p>把循环想小，还有一层产品含义：功能膨胀会把「默认行为」变成隐形合同。计划模式、子智能体面板、权限弹窗一旦进入内核，公司就得跟着厂商的政策模型走。Pi 选择把这些留在扩展与例子里，等于把合同表面推到你的仓库。好处是可审计、可替换；坏处是没有「开箱合规」。若你的组织习惯购买一体化代理产品，这种极简会显得「缺功能」——其实是缺默认治理，而不是缺循环本身。</p>
+  <p>1.0 发布把编码智能体描述为「硬化、最小、可扩展、人与企业可以依赖」的运行框架，同时把 Durable 标成实验性。同一周内 Cloudflare 又发布了 PiHarness beta。对公司读者，时间线很重要：你不是在评估一个静止了三年的框架，而是在评估一条高节奏发布线。五天内从 1.0.0 到 1.0.4，意味着修复快，也意味着升级成本真实存在。后文成熟度章会把「patch 里出现 Breaking Changes」写成风险项，而不是脚注。</p>
 
-  <h3>Pi 把脚手架拆成包</h3>
-  <p>在仓库里，「Pi」是一组包，而不是一个二进制的全部含义：</p>
-  <ul>
-    <li><code>pi-ai</code>：多提供方模型 API 与流式协议。</li>
-    <li><code>pi-agent-core</code>：几乎无状态的智能体循环。</li>
-    <li><code>pi-coding-agent</code>：你安装的 <code>pi</code> CLI（会话、扩展、TUI、RPC、SDK）。</li>
-    <li><code>pi-durable</code>：实验性的持久化运行框架（library，不是服务器产品）。</li>
-    <li><code>chord</code>：应用组合运行时（服务、复制状态、RPC、插件），Durable 用来跟踪文档。</li>
-  </ul>
+
+  <h3>「Pi」拆成包之后</h3>
+  <p>在仓库里，名字指向一组包：<code>pi-ai</code>（多提供方模型与流式协议）、<code>pi-agent-core</code>（几乎无状态的循环）、<code>pi-coding-agent</code>（你安装的 <code>pi</code> CLI：会话、扩展、TUI、RPC、SDK）、<code>pi-durable</code>（实验性持久化运行库）、<code>chord</code>（应用组合与文档跟踪）。1.0 是对编码智能体及兄弟包的稳定性声明；同一发布把 Durable 标为 <em>experimental</em>——二者不要混为一谈。</p>
 
   <div class="fig" id="fig2">
-    <div class="fig-head"><span class="fig-id">图 2</span><h4 class="fig-title">单体仓库包关系（定性）</h4></div>
+    <div class="fig-head"><span class="fig-id">图 2</span><h4 class="fig-title">包关系（定性）</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img">
-  <rect x="40" y="30" width="200" height="70" rx="12" fill="#0071e3"/>
-  <text x="140" y="60" text-anchor="middle" fill="#fff" font-size="14" font-family="system-ui" font-weight="600">pi-coding-agent</text>
-  <text x="140" y="80" text-anchor="middle" fill="#d7e8fc" font-size="11" font-family="system-ui">CLI · TUI · RPC · SDK</text>
-  <rect x="280" y="30" width="160" height="70" rx="12" fill="#fff" stroke="#d2d2d7"/>
-  <text x="360" y="60" text-anchor="middle" fill="#1d1d1f" font-size="14" font-family="system-ui" font-weight="600">pi-agent-core</text>
-  <text x="360" y="80" text-anchor="middle" fill="#6e6e73" font-size="11" font-family="system-ui">循环</text>
-  <rect x="480" y="30" width="160" height="70" rx="12" fill="#fff" stroke="#d2d2d7"/>
-  <text x="560" y="60" text-anchor="middle" fill="#1d1d1f" font-size="14" font-family="system-ui" font-weight="600">pi-ai</text>
-  <text x="560" y="80" text-anchor="middle" fill="#6e6e73" font-size="11" font-family="system-ui">providers · stream</text>
-  <rect x="120" y="150" width="180" height="70" rx="12" fill="#fff4ec" stroke="#b54400"/>
-  <text x="210" y="180" text-anchor="middle" fill="#b54400" font-size="14" font-family="system-ui" font-weight="600">pi-durable</text>
-  <text x="210" y="200" text-anchor="middle" fill="#6e6e73" font-size="11" font-family="system-ui">experimental harness</text>
-  <rect x="340" y="150" width="140" height="70" rx="12" fill="#fff" stroke="#d2d2d7"/>
-  <text x="410" y="180" text-anchor="middle" fill="#1d1d1f" font-size="14" font-family="system-ui" font-weight="600">chord</text>
-  <text x="410" y="200" text-anchor="middle" fill="#6e6e73" font-size="11" font-family="system-ui">documents</text>
-  <rect x="520" y="150" width="140" height="70" rx="12" fill="#fff" stroke="#d2d2d7"/>
-  <text x="590" y="180" text-anchor="middle" fill="#1d1d1f" font-size="14" font-family="system-ui" font-weight="600">pi-tui / mcp / …</text>
-  <text x="590" y="200" text-anchor="middle" fill="#6e6e73" font-size="11" font-family="system-ui">周边能力</text>
-  <path d="M240,65 H275" stroke="#86868b" stroke-width="1.5"/>
-  <path d="M440,65 H475" stroke="#86868b" stroke-width="1.5"/>
-  <path d="M140,100 V150" stroke="#b54400" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <path d="M210,185 H335" stroke="#86868b" stroke-width="1.5"/>
-  <text x="360" y="245" text-anchor="middle" fill="#86868b" font-size="11" font-family="system-ui">虚线：Durable 不替代编码智能体；它是另一条产品线</text>
+<svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="40" y="24" width="200" height="64" rx="12" fill="#0071e3"/>
+  <text x="140" y="52" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">pi-coding-agent</text>
+  <text x="140" y="70" text-anchor="middle" fill="#d7e8fc" font-size="11">CLI · TUI · RPC · SDK</text>
+  <rect x="280" y="24" width="160" height="64" rx="12" fill="#fff" stroke="#d2d2d7"/>
+  <text x="360" y="52" text-anchor="middle" font-size="14" font-weight="600">pi-agent-core</text>
+  <text x="360" y="70" text-anchor="middle" fill="#6e6e73" font-size="11">循环</text>
+  <rect x="480" y="24" width="160" height="64" rx="12" fill="#fff" stroke="#d2d2d7"/>
+  <text x="560" y="52" text-anchor="middle" font-size="14" font-weight="600">pi-ai</text>
+  <text x="560" y="70" text-anchor="middle" fill="#6e6e73" font-size="11">providers · stream</text>
+  <rect x="120" y="130" width="180" height="64" rx="12" fill="#fff4ec" stroke="#b54400"/>
+  <text x="210" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="#b54400">pi-durable</text>
+  <text x="210" y="176" text-anchor="middle" fill="#6e6e73" font-size="11">experimental library</text>
+  <rect x="360" y="130" width="160" height="64" rx="12" fill="#fff" stroke="#d2d2d7"/>
+  <text x="440" y="158" text-anchor="middle" font-size="14" font-weight="600">chord</text>
+  <text x="440" y="176" text-anchor="middle" fill="#6e6e73" font-size="11">documents · ops</text>
+  <path d="M240,56 H275" stroke="#d2d2d7" stroke-width="1.5"/>
+  <path d="M440,56 H475" stroke="#d2d2d7" stroke-width="1.5"/>
+  <path d="M140,88 V120" stroke="#d2d2d7" stroke-width="1.5"/>
+  <path d="M440,88 V130" stroke="#d2d2d7" stroke-width="1.5"/>
 </svg>
     </div>
     <div class="fig-cap">
-      显示编码智能体稳定线与实验性 Durable 库的包级关系。本图为定性结构，不表示依赖权重。
-      <span class="src">资料来源：仓库 README；Pi Technical Manual §1.2 包表；earendil.com/posts/pi-durable/。</span>
+      编码智能体是稳定 1.0 线；Durable 是同版本号下的实验库，不替换 CLI。
+      <span class="src">资料：仓库 README；earendil.com/posts/pi-1-0、pi-durable。</span>
     </div>
   </div>
 </section>
 
 <section class="chapter" id="ch2">
   <div class="ch-num">Chapter 2</div>
-  <h2>Pi 作为最小机器</h2>
-  <p class="lede">Pi 编码智能体的哲学写在官网上：提供原语（primitives），而不是替你决定产品功能。默认工具很少；你要的策略用扩展、技能与包自己长出来。</p>
-
-  <h3>四件默认工具</h3>
-  <p>默认工具是 <code>read</code>、<code>write</code>、<code>edit</code>、<code>bash</code>（另有平台相关能力如 PowerShell 工具路径）。没有内置的「计划模式」或「子智能体产品」——仓库里有参考扩展，但核心刻意不绑死。</p>
-  <p>为什么四个工具就够用？因为对编码模型来说，「读文件 → 改文件 → 跑命令看结果」已经覆盖了大部分软件工程闭环。搜索、规划、多代理协作当然有价值，但它们可以被表达为：更多工具、更多提示词段、或对同一循环的再次调用。Pi 把后一类表达留给扩展，而不是写进内核。手册甚至指出：省略功能里，后台 bash 连参考扩展都没有——这说明「最小」是真的最小，不是营销话术。</p>
-  <p>压缩何时触发，也可以从第一性原理理解。模型上下文窗口是硬预算。Pi 默认保留一段「储备」token（<code>reserveTokens</code>，默认 16384），当已用上下文超过「窗口减去储备」时自动摘要旧消息。摘要是新条目；旧条目仍在树上。于是你得到两种时间尺度：给模型看的「工作记忆」，以及给人审计的「完整档案」。企业若把会话当日志外发，必须假设其中含密钥与客户数据。</p>
-
-  <h3>会话是 JSONL 树</h3>
-  <p>会话落在 <code>~/.pi/agent/sessions/&lt;cwd&gt;/</code> 一类路径下，格式是 JSONL。每条条目带父节点，因此对话是一棵树，而不是只能前进的一条线。你可以 <code>/tree</code> 浏览分支，<code>/fork</code> 开新会话文件，<code>/clone</code> 复制分支。离开分支时可以生成摘要。重要的是：<strong>压缩（compaction）会摘要旧消息，但原条目默认不删</strong>。</p>
+  <h2>一次轮回里到底发生了什么</h2>
+  <p class="lede">现象层看完，下一层问：一次用户输入之后，系统里按时间顺序多了哪些可观察对象？下面用步进器把「读 README」拆开。每一步结束时，会话文件、内存队列或 UI 上会出现新的东西——这正是后续「崩溃丢什么」实验的对照基线。</p>
 
   <div class="fig" id="fig3">
-    <div class="fig-head"><span class="fig-id">图 3</span><h4 class="fig-title">会话树：分支与压缩</h4></div>
+    <div class="fig-head"><span class="fig-id">图 3 · 互动</span><h4 class="fig-title">一次轮回步进器</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img">
-  <circle cx="80" cy="100" r="18" fill="#e8f1fc" stroke="#0071e3"/><text x="80" y="104" text-anchor="middle" font-size="11" font-family="system-ui">U1</text>
-  <circle cx="180" cy="100" r="18" fill="#fff" stroke="#d2d2d7"/><text x="180" y="104" text-anchor="middle" font-size="11" font-family="system-ui">A1</text>
-  <circle cx="280" cy="60" r="18" fill="#fff" stroke="#d2d2d7"/><text x="280" y="64" text-anchor="middle" font-size="11" font-family="system-ui">U2a</text>
-  <circle cx="280" cy="140" r="18" fill="#eaf7ee" stroke="#1a7f37"/><text x="280" y="144" text-anchor="middle" font-size="11" font-family="system-ui">U2b</text>
-  <circle cx="380" cy="140" r="18" fill="#eaf7ee" stroke="#1a7f37"/><text x="380" y="144" text-anchor="middle" font-size="11" font-family="system-ui">A2</text>
-  <circle cx="480" cy="140" r="18" fill="#fff3d1" stroke="#8a6d00"/><text x="480" y="144" text-anchor="middle" font-size="11" font-family="system-ui">Σ</text>
-  <circle cx="580" cy="140" r="18" fill="#eaf7ee" stroke="#1a7f37"/><text x="580" y="144" text-anchor="middle" font-size="11" font-family="system-ui">U3</text>
-  <path d="M98,100 H160" stroke="#86868b"/><path d="M198,100 H250" stroke="#86868b"/>
-  <path d="M250,100 V60 H262" stroke="#86868b"/><path d="M250,100 V140 H262" stroke="#1a7f37"/>
-  <path d="M298,140 H360" stroke="#1a7f37"/><path d="M398,140 H460" stroke="#8a6d00"/><path d="M498,140 H560" stroke="#1a7f37"/>
-  <text x="280" y="30" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="system-ui">探索分支</text>
-  <text x="480" y="175" text-anchor="middle" font-size="11" fill="#8a6d00" font-family="system-ui">压缩摘要（原条目仍在）</text>
-  <text x="580" y="175" text-anchor="middle" font-size="11" fill="#1a7f37" font-family="system-ui">当前 leaf</text>
-</svg>
+      <div class="btn-row">
+        <button type="button" class="btn" id="turnPrev">上一步</button>
+        <button type="button" class="btn primary" id="turnNext">下一步</button>
+        <button type="button" class="btn" id="turnReset">重置</button>
+        <span class="status-pill idle" id="turnPill">step 0</span>
+      </div>
+      <div class="slider-row">
+        <input type="range" id="turnSlider" min="0" max="8" value="0"/>
+        <span id="turnLabel">0 / 8</span>
+      </div>
+      <div class="state-board" id="turnState"></div>
+      <div class="step-log" id="turnLog" aria-live="polite"></div>
     </div>
     <div class="fig-cap">
-      显示带父指针的会话树。压缩添加摘要节点。原始条目保持可用。
-      <span class="src">资料来源：docs/sessions.md；docs/compaction.md（默认 reserveTokens 16384）。</span>
+      逐步展开：用户消息落盘 → 上下文组装 → 模型流 → 工具调用 → 结果写回 → 最终答复 → agent_settled。
+      <span class="src">资料：how-pi-works、sessions、sdk；手册一次捕获：两轮约 29 事件、四次落盘（定性形状）。</span>
     </div>
   </div>
 
-  <h3>扩展、技能、包</h3>
-  <p><strong>扩展（extension）</strong>是用 TypeScript 写的、经 jiti 加载的进程内模块，拥有完整权限。你可以注册工具、命令、提供方、MCP、虚拟模型，并监听事件。若 <code>tool_call</code> 处理器抛错，调用会被阻断（失败关闭）。</p>
-  <p><strong>技能（skill）</strong>遵循 agentskills.io 一类规格，用渐进披露把能力说明塞进上下文。<strong>包（package）</strong>可用 <code>pi install npm:/git:/local</code> 安装；带 <code>pi-package</code> 关键字的包会出现在 pi.dev/packages。项目级包要在项目信任之后才加载。</p>
+  <h3>这一步之后系统里多了什么</h3>
+  <p>步进器每前进一步，请强迫自己说一句完整的话：「这一步之后，多了什么、仍停留在内存里的是什么、外部世界变了没有。」说不出来，就说明你还在看界面动画，而不是看状态。</p>
+  <p>用户消息写入会话后，磁盘上多了一条带父指针的 JSONL 条目——分支导航依赖的就是这些父指针。上下文组装本身通常不单独落成「一条用户可见消息」，但它决定了模型「看见」的窗口：系统提示、<code>AGENTS.md</code> / <code>CLAUDE.md</code>、<code>SYSTEM.md</code>、技能描述（渐进披露）、工具表、近期对话。压缩触发条件是 <code>contextTokens &gt; contextWindow − reserveTokens</code>（默认 reserve 16,384）；压缩会总结旧消息并保留近端，<strong>原始条目默认不删除</strong>。</p>
+  <p>模型流式返回时，UI 上先出现局部文本；若出现工具调用，运行时执行默认工具（read / write / edit / bash）或扩展注册的工具。工具结果写回后，内层时钟可能再转一圈。整轮结束的信号是 <code>agent_settled</code>。手册记录的一次假模型捕获说明：流式更新远多于「最终答案」事件——宿主若只订阅稀疏事件，会误判空闲。</p>
 
-  <h3>Codemode 与 MCP（1.0 起内置）</h3>
-  <p>Codemode 让模型写一段在 QuickJS 里跑的 JavaScript。沙箱没有 Node API、文件系统、网络或定时器；对外只能通过 <code>tools.*</code> 与 <code>models.*</code>。失败前已经发生的工具调用<strong>不会自动撤销</strong>。</p>
-  <p>MCP 支持 stdio 与 streamable HTTP，以及 OAuth。用户配置在 <code>~/.pi/agent/mcp.json</code>；项目配置在 <code>.pi/mcp.json</code>，且<strong>仅在项目信任后读取</strong>。CLI 默认启用内置 MCP；SDK 默认不启用 Codemode / MCP / tool_search——嵌入时你要显式打开。</p>
-
-  <div class="callout caution">
-    <div class="label">Caution · 注意</div>
-    <p>不要把「最小内核」理解成「安全默认」。内核省略权限提示与沙箱。你必须用容器或扩展补上控制。</p>
+  <div class="fig" id="fig4">
+    <div class="fig-head"><span class="fig-id">图 4</span><h4 class="fig-title">内层时钟 vs 外层时钟</h4></div>
+    <div class="fig-body">
+<svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="40" y="40" width="640" height="100" rx="12" fill="#e8f1fc" stroke="#0071e3"/>
+  <text x="60" y="68" font-size="13" font-weight="600" fill="#0071e3">外层：一次 prompt() / 用户回合 → agent_settled</text>
+  <rect x="70" y="84" width="170" height="40" rx="8" fill="#fff" stroke="#d2d2d7"/>
+  <text x="155" y="109" text-anchor="middle" font-size="12">模型尝试 #1</text>
+  <rect x="260" y="84" width="170" height="40" rx="8" fill="#fff" stroke="#d2d2d7"/>
+  <text x="345" y="109" text-anchor="middle" font-size="12">工具 + 再尝试</text>
+  <rect x="450" y="84" width="200" height="40" rx="8" fill="#fff" stroke="#d2d2d7"/>
+  <text x="550" y="109" text-anchor="middle" font-size="12">溢出则 compact 再试</text>
+</svg>
+    </div>
+    <div class="fig-cap">
+      外层可包含多次内层尝试（工具轮、压缩重试、steer 插入后继续）。
+      <span class="src">资料：docs/sdk、compaction；手册 settle-vs-end。</span>
+    </div>
   </div>
 </section>
 
 <section class="chapter" id="ch3">
   <div class="ch-num">Chapter 3</div>
-  <h2>四种入口：TUI、打印、RPC、SDK</h2>
-  <p class="lede">同一个循环，可以装进终端、管道、子进程协议，或你自己的 Node/Bun 进程。选型的关键是：你要进程隔离，还是进程内控制。</p>
+  <h2>会话为什么是树</h2>
+  <p class="lede">线性聊天日志足够「回看」，但不够「试另一条路」。Pi 编码智能体把会话存成树：每条条目有父节点。于是 <code>/tree</code> 能导航替代分支，<code>/fork</code> 能开新会话文件，离开分支时可总结。树不是装饰——它是「可后悔的探索」的数据结构。</p>
 
-  <div class="cmp-grid">
-    <div class="cmp-card"><h5>Interactive TUI</h5><p>默认全屏终端 UI。适合个人日常驱动。用 Enter 注入 steer（当前工具轮次后插入），Alt+Enter 排队 follow-up（本轮结束后再跑）。</p></div>
-    <div class="cmp-card"><h5>Print / JSON</h5><p><code>-p</code> / <code>--mode json</code>。适合脚本与 CI 单次任务。</p></div>
-    <div class="cmp-card"><h5>RPC</h5><p><code>pi --mode rpc</code>：JSONL over stdin/stdout，严格 LF 分帧与 id 关联。任意语言可驱动；天然进程隔离。</p></div>
-    <div class="cmp-card"><h5>SDK</h5><p><code>createAgentSession()</code> 等 API 嵌进 Node/Bun。边界可替换（sessionManager、tools、resourceLoader…）。内置能力默认关闭。</p></div>
+  <p>会话文件落在 <code>~/.pi/agent/sessions/&lt;cwd&gt;/</code> 一类路径下，格式为 JSONL。你改提示、重跑工具、从某条助手消息分叉，本质上是在树上长出新枝。压缩不砍掉旧条目，所以「看起来变短的上下文」与「磁盘上仍在的历史」可以并存——这既利于审计，也意味着会话文件可能含密钥，分享前要当心。</p>
+  <p>再看一次「父指针」带来的操作后果。当你在某条助手消息上后悔，你不是在改历史，而是在旁枝上重写未来。主链仍可导航回来；总结离开的分支时，你可能把一条旁枝压成较短的叙述，但原始条目仍在。这种「不删除的后悔」与 Git 的可达对象很像：用户界面可以显得干净，存储层仍记得你试过什么。对研究与排错极好；对「被遗忘权」类合规则需要额外策略。</p>
+
+  <div class="fig" id="fig5">
+    <div class="fig-head"><span class="fig-id">图 5 · 互动</span><h4 class="fig-title">点选会话树节点</h4></div>
+    <div class="fig-body">
+      <div class="btn-row" id="treeBtns">
+        <button type="button" class="btn primary" data-node="root">用户：读 README</button>
+        <button type="button" class="btn" data-node="a1">助手：调用 read</button>
+        <button type="button" class="btn" data-node="t1">工具结果</button>
+        <button type="button" class="btn" data-node="a2">助手：最终答复</button>
+        <button type="button" class="btn" data-node="fork">分叉：改问 CHANGELOG</button>
+      </div>
+      <svg id="sessionTreeSvg" viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img"></svg>
+      <div class="commit-detail" id="treeDetail">点选上方节点，查看该条目在树上的角色。</div>
+    </div>
+    <div class="fig-cap">
+      主链与分叉枝共享祖先；分叉不复制整棵历史的语义在 Durable 里更极端（见第 10 章）。
+      <span class="src">资料：docs/sessions.md。</span>
+    </div>
   </div>
 
-  <h3>案例：OpenClaw——嵌入，然后分叉</h3>
-  <p>pi.dev 仍把 OpenClaw 当作 SDK 集成示例。但 OpenClaw 自己的文档写明：它现在拥有 <code>@openclaw/agent-core</code>，「不再依赖外部智能体框架包」；<code>pi</code> 只是遗留别名，仍依赖 pi-tui。这对公司是有用信号：Pi SDK 足以撑起大型产品；同时，深度产品化后<strong>分叉运行时是常见终点</strong>。</p>
-  <div class="callout note">
-    <div class="label">Source note · 资料说明</div>
-    <p>官网「OpenClaw 用 Pi」的叙述已过时（营销层）。以 OpenClaw 文档为准。</p>
-  </div>
+  <p>四种入口共享同一套会话与循环语义，只是把循环暴露给不同宿主：交互式 TUI；print/JSON；RPC（JSONL over stdio，严格 LF 与 id 关联）；SDK（<code>createAgentSession()</code>）。RPC 换进程隔离；SDK 换进程内控制。SDK 里 Codemode、tool_search、MCP <strong>默认不开启</strong>——这是刻意的最小默认，不是疏漏。</p>
+  <p>树结构还改变了「分享」与「导出」的含义。<code>/export</code> 可以写出 HTML 或 JSONL；<code>/share</code> 可上传到私有 gist，或在登录 Radius 后作为 Radius artifact。会话文件里可能含有密钥、令牌碎片与内部路径。树让你容易分叉探索，也让你容易在不知情时把整枝历史交出去。公司若把 Pi 当日常驱动，应把会话目录纳入数据分级：哪些可进工单附件，哪些必须留在本机或受控卷。</p>
+  <p>压缩与树交织时，会出现一种直觉错位：屏幕上的上下文变短了，磁盘上的条目却还在。这对审计友好，对「删掉敏感回合」不友好。Durable 一侧更加极端：公开材料写明尚不能删除对话，重置只移动 head。若你的合规要求是「可擦除」，两条产品线都需要你在宿主层另建封存与脱敏策略，而不是假设框架已提供。</p>
 </section>
 
 <section class="chapter" id="ch4">
   <div class="ch-num">Chapter 4</div>
-  <h2>信任问题与安全模型</h2>
-  <p class="lede">Pi 明确说：不要把模型生成的命令与代码当可信输入。它也明确说：没有内置的按次权限提示。公司若默认「装上就能给全员用」，等于把 shell 交给了模型。</p>
+  <h2>工具：意图先于执行</h2>
+  <p class="lede">在编码智能体里，工具调用看起来像「模型说了就算」。在 Durable 里，设计被推进一步：先把意图提交进可恢复状态，再执行副作用。即便你暂时只用 CLI，理解「意图与结局分离」也很重要——因为崩溃对照实验的关键就在这里。</p>
 
-  <div class="fig" id="fig4">
-    <div class="fig-head"><span class="fig-id">图 4</span><h4 class="fig-title">安全责任边界（定性）</h4></div>
+  <h3>默认四工具与暴露模式</h3>
+  <p>默认工具是 read、write、edit、bash。扩展可以 <code>registerTool</code>，并选择暴露方式：直接、仅模型、codemode、延迟加载或隐藏。若 <code>tool_call</code> 处理器抛错，调用被阻断（fail-closed）。没有内置的「每次工具弹权限」——官方安全文档写明：Pi 不按工具调用征求批准；你应容器化，或用扩展例子（permission-gate、protected-paths、confirm-destructive）自己做门闩。</p>
+
+  <div class="fig" id="fig6">
+    <div class="fig-head"><span class="fig-id">图 6</span><h4 class="fig-title">工具调用：从模型文本到副作用</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img">
-  <rect x="30" y="30" width="200" height="180" rx="12" fill="#fdecee" stroke="#c41e3a"/>
-  <text x="130" y="58" text-anchor="middle" font-size="13" font-weight="600" fill="#c41e3a" font-family="system-ui">Pi 不内置</text>
-  <text x="130" y="90" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">按次权限提示</text>
-  <text x="130" y="112" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">OS 级沙箱</text>
-  <text x="130" y="134" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">用户身份 / 鉴权</text>
-  <text x="130" y="156" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">提示注入防护产品</text>
-  <text x="130" y="178" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">全局强制防护钩子</text>
-  <rect x="260" y="30" width="200" height="180" rx="12" fill="#fff4ec" stroke="#b54400"/>
-  <text x="360" y="58" text-anchor="middle" font-size="13" font-weight="600" fill="#b54400" font-family="system-ui">Pi 提供的缝</text>
-  <text x="360" y="90" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">扩展 tool_call 阻断</text>
-  <text x="360" y="112" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">项目信任门闩</text>
-  <text x="360" y="134" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">参考：permission-gate</text>
-  <text x="360" y="156" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">Codemode QuickJS 边界</text>
-  <text x="360" y="178" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">供应链：ignore-scripts 等</text>
-  <rect x="490" y="30" width="200" height="180" rx="12" fill="#eaf7ee" stroke="#1a7f37"/>
-  <text x="590" y="58" text-anchor="middle" font-size="13" font-weight="600" fill="#1a7f37" font-family="system-ui">公司必须补</text>
-  <text x="590" y="90" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">容器 / micro-VM</text>
-  <text x="590" y="112" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">强制权限扩展</text>
-  <text x="590" y="134" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">密钥与会话脱敏</text>
-  <text x="590" y="156" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">遥测退出策略</text>
-  <text x="590" y="178" text-anchor="middle" font-size="12" fill="#1d1d1f" font-family="system-ui">包 / MCP 准入</text>
+<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="20" y="50" width="130" height="50" rx="10" fill="#fff" stroke="#d2d2d7"/>
+  <text x="85" y="80" text-anchor="middle" font-size="12">模型输出 tool_call</text>
+  <rect x="180" y="50" width="140" height="50" rx="10" fill="#e8f1fc" stroke="#0071e3"/>
+  <text x="250" y="80" text-anchor="middle" font-size="12">解析 / 钩子门闩</text>
+  <rect x="350" y="50" width="150" height="50" rx="10" fill="#fff4ec" stroke="#b54400"/>
+  <text x="425" y="80" text-anchor="middle" font-size="12">执行（事务外）</text>
+  <rect x="530" y="50" width="160" height="50" rx="10" fill="#eaf7ee" stroke="#1a7f37"/>
+  <text x="610" y="80" text-anchor="middle" font-size="12">结果写回会话</text>
+  <path d="M150,75 H175" stroke="#0071e3" stroke-width="1.5"/>
+  <path d="M320,75 H345" stroke="#0071e3" stroke-width="1.5"/>
+  <path d="M500,75 H525" stroke="#0071e3" stroke-width="1.5"/>
+  <text x="360" y="130" text-anchor="middle" font-size="11" fill="#6e6e73">Durable：在「执行」前多一次 intent 提交（第 7–9 章）</text>
 </svg>
     </div>
     <div class="fig-cap">
-      列出 Pi 不提供的控制、提供的扩展缝，以及公司侧责任。本图为定性责任图。
-      <span class="src">资料来源：docs/security.md；README containerization；Cloudflare PiHarness 文档（Durable 无内置审批）。</span>
+      CLI 路径上执行前可有扩展钩子；Durable 另有「意图先提交」的硬规则。
+      <span class="src">资料：extensions.md、security.md；Durable manual §5–6。</span>
     </div>
   </div>
 
-  <h3>项目信任不是沙箱</h3>
-  <p>信任设置决定是否加载某些项目级资源（例如项目 MCP、项目包）。它<strong>不是</strong>操作系统隔离。更糟的是：<code>AGENTS.md</code> / <code>CLAUDE.md</code> 一类上下文文件可在信任之外仍被装入。扩展在进程内以完整权限运行——把第三方扩展当成要审计的代码，而不是「插件市场装饰品」。</p>
+  <h3>Codemode：沙箱里的 JavaScript</h3>
+  <p>Codemode 让模型写一段作为 async 函数体的 JavaScript，在 QuickJS 中运行：无 Node API、无文件系统、无网络、无定时器；对外只能通过 <code>tools.*</code> 与 <code>models.*</code>。文档强调：工具调用是真实发生的——失败前已做的调用不会自动撤销。<code>store()</code> / <code>load()</code> 把小状态存成跟随分支的会话条目。</p>
+  <p>把 Codemode 当成「更安全的 bash」会误判。沙箱挡住的是 Node 能力，不是通过 tools 触达的真实世界。一次失败的脚本仍可能已经调用了会写文件或打 API 的工具。公司政策应把 Codemode 与普通工具调用放在同一审批与审计面上，而不是因为「QuickJS」三个字就降级管控。</p>
 
-  <h3>公司侧最小策略模板</h3>
-  <ul class="checklist" id="secChecklist">
-    <li><input type="checkbox"/> 在容器、Docker Sandboxes 或 Gondolin 一类 micro-VM 中运行 <code>pi</code>。</li>
-    <li><input type="checkbox"/> 分发内部 Pi 包：从 <code>permission-gate</code>、<code>protected-paths</code>、<code>confirm-destructive</code> 起步。</li>
-    <li><input type="checkbox"/> 标准化 <code>~/.pi/agent/settings.json</code>：遥测、包允许列表、MCP 白名单。</li>
-    <li><input type="checkbox"/> 设置 <code>PI_TELEMETRY=0</code> 或策略化评估默认开启的安装遥测。</li>
-    <li><input type="checkbox"/> 禁止未审计扩展；会话文件按密钥载体管理（分享会泄漏）。</li>
-  </ul>
+  <h3>MCP：配置在信任之后</h3>
+  <p>1.0 起原生 MCP（stdio 与 streamable HTTP，含 OAuth 检查）以 <code>builtin:mcp</code> 形式进入 CLI，默认开启，可用 <code>-builtin:mcp</code> 去掉。用户配置在 <code>~/.pi/agent/mcp.json</code>；项目配置 <code>.pi/mcp.json</code> <strong>仅在项目信任之后读取</strong>。这与「最小主义」叙事有张力：播客旧说法「No MCP」已过时——核心在长大，公司策略要跟着变。</p>
+  <p>最小主义漂移本身是治理信号。当内置能力变多，默认攻击面也变多。车队镜像应显式声明启用了哪些 builtin，并在变更窗口评审新增项。SDK 嵌入路径继续保持「默认关闭」更安全；CLI 日常驱动路径则要假定 MCP 已在，除非你关掉它。</p>
+
+  <div class="callout caution">
+    <div class="label">Warning</div>
+    <p>项目信任不是沙箱。AGENTS.md / CLAUDE.md 无论信任与否都会加载。把模型生成的命令与代码当不信任输入；用容器或微虚拟机隔离。</p>
+  </div>
 </section>
 
 <section class="chapter" id="ch5">
   <div class="ch-num">Chapter 5</div>
-  <h2>为什么终端智能体不够</h2>
-  <p class="lede">编码智能体把「对话记录」持久化得很好。它默认不把「这一轮进行到哪一步」持久化。进程一死，你往往只剩下半截聊天记录，以及一句：「你继续吧。」</p>
+  <h2>扩展为什么是进程内代码</h2>
+  <p class="lede">Pi 的定制面是 TypeScript 扩展、skills、packages、提示模板与主题。扩展经 jiti 加载，与智能体<strong>同进程、全权限</strong>。这不是偶然实现细节，而是「primitives, not features」的代价：你得到可编程的内核钩子；你失去「默认安全边界」。</p>
 
-  <h3>四种进行中状态</h3>
-  <p>一次真实运行里，至少有四类状态同时存在：</p>
-  <ol>
-    <li><strong>对话记录（transcript）</strong>：已经写下的消息与工具结果。</li>
-    <li><strong>模型调用</strong>：正在流式生成的 token；可能已经产生费用。</li>
-    <li><strong>工具调用</strong>：意图已发出、副作用可能已发生、结果尚未提交。</li>
-    <li><strong>应用状态</strong>：你的 bot 业务数据（工单进度、调查笔记、审批备忘）。</li>
-  </ol>
-  <p>经典 Pi 编码智能体主要保证第 1 类。手册里的说法很准确：它「保留对话，不保留这一轮（keeps the conversation, not the turn）」。排队中的 steer / follow-up 在内存里；工具已开始执行这件事，也可能没有耐久记录。</p>
-  <p>想象一个值班机器人正在 <code>bash</code> 里跑诊断脚本。脚本已对外网 API 发出请求，进程此时被 Kubernetes 杀掉。磁盘上的 JSONL 可能只有「助手说打算调用 bash」或甚至只有更早的消息；「调用已开始、stdout 写到一半」未必存在。人回来只能说「继续」，模型则可能重复副作用。Durable 的回答不是魔法：它要求你在执行前先把意图提交进存储，并承认外部世界无法回滚。</p>
-  <p>因此，「Durable」这个词在工程上必须拆开读。它耐久的是<strong>已提交的会话事实与任务检查点</strong>；它不耐久未提交的流式碎片；它也不自动耐久外部系统的业务约束。公司若把口号听成「恰好一次、永不丢、可断电」，就会在 SQLite <code>synchronous=NORMAL</code> 与不安全重放上栽跟头。</p>
+  <p>扩展 API 包括 <code>pi.on(event)</code>、<code>registerTool</code>、<code>registerCommand</code>、<code>registerProvider</code>、<code>registerMcpServer</code>、<code>registerVirtualModel</code>、<code>registerToolRenderer</code> 等。仓库里有大量扩展例子（含 permission-gate、sandbox、plan-mode、subagent、git-checkpoint）。子智能体与计划模式是例子，不是内置产品功能——站点明确说跳过这类功能，让你自己建。</p>
 
-  <div class="fig" id="fig5">
-    <div class="fig-head"><span class="fig-id">图 5</span><h4 class="fig-title">进程崩溃时丢了什么（定性）</h4></div>
+  <div class="fig" id="fig7">
+    <div class="fig-head"><span class="fig-id">图 7 · 互动</span><h4 class="fig-title">对照：权限扩展挂上 vs 未挂上</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" role="img">
-  <text x="180" y="28" text-anchor="middle" font-size="13" font-weight="600" font-family="system-ui">编码智能体</text>
-  <text x="540" y="28" text-anchor="middle" font-size="13" font-weight="600" font-family="system-ui">Pi Durable</text>
-  <rect x="40" y="50" width="280" height="40" rx="8" fill="#eaf7ee" stroke="#1a7f37"/>
-  <text x="180" y="75" text-anchor="middle" font-size="13" font-family="system-ui">✓ 已提交的 JSONL 条目</text>
-  <rect x="40" y="100" width="280" height="40" rx="8" fill="#fdecee" stroke="#c41e3a"/>
-  <text x="180" y="125" text-anchor="middle" font-size="13" font-family="system-ui">✗ 内存中的排队消息</text>
-  <rect x="40" y="150" width="280" height="40" rx="8" fill="#fdecee" stroke="#c41e3a"/>
-  <text x="180" y="175" text-anchor="middle" font-size="13" font-family="system-ui">✗ 工具已开始 / 部分流式输出</text>
-  <rect x="400" y="50" width="280" height="40" rx="8" fill="#eaf7ee" stroke="#1a7f37"/>
-  <text x="540" y="75" text-anchor="middle" font-size="13" font-family="system-ui">✓ 条目 + 任务检查点 + 文档</text>
-  <rect x="400" y="100" width="280" height="40" rx="8" fill="#eaf7ee" stroke="#1a7f37"/>
-  <text x="540" y="125" text-anchor="middle" font-size="13" font-family="system-ui">✓ 工具意图（执行前先提交）</text>
-  <rect x="400" y="150" width="280" height="40" rx="8" fill="#fff3d1" stroke="#8a6d00"/>
-  <text x="540" y="175" text-anchor="middle" font-size="13" font-family="system-ui">~ 未提交进度（默认约 100ms）</text>
-</svg>
+      <div class="btn-row">
+        <button type="button" class="btn primary" id="guardOn">挂上 permission 扩展</button>
+        <button type="button" class="btn" id="guardOff">对话未选择该扩展</button>
+      </div>
+      <div class="cmp-grid" id="guardCmp">
+        <div class="cmp-card good" id="guardCardA">
+          <h5>有 beforeTool / 门闩</h5>
+          <p>破坏性路径可被拦截；审批备忘可写入文档。仍须宿主强制 install + configure。</p>
+        </div>
+        <div class="cmp-card" id="guardCardB">
+          <h5>等待切换…</h5>
+          <p>选择上方按钮查看对照。</p>
+        </div>
+      </div>
     </div>
     <div class="fig-cap">
-      对比崩溃后两类系统通常保留的状态。黄色表示仍可能丢失最近未提交进度。
-      <span class="src">资料来源：Earendil Pi Durable 博文；Durable 手册 §1.1；CHANGELOG settings.progress 默认 100ms。</span>
+      Durable 侧：注册表是进程内的、不持久化；对话只存扩展名；未安装则静默跳过。「没有全局钩子」。
+      <span class="src">资料：extensions.md；Durable manual §7；CF：「尚无内置审批步骤」。</span>
     </div>
   </div>
 
-  <p>公司级工作负载——Slack 值班机器人、持续数小时的调查、多个人同时引导同一智能体、Kubernetes 驱逐后继续跑——需要的不是「更强的提示词」，而是<strong>把可见事实都变成已提交状态</strong>。这就是 Pi Durable 要解决的问题。</p>
+  <p>对公司而言，这意味着：安全策略必须变成<strong>你发布的包与强制配置</strong>，而不是「开箱弹窗」。托管安装会钉住传递依赖；自 1.0.1 起 npm 全局安装因去掉 shrinkwrap 而不再钉传递依赖——车队部署更宜托管安装或 Nix。安装遥测 <code>enableInstallTelemetry</code> 默认 true；可用 <code>PI_TELEMETRY=0</code> 关闭。具体载荷内容据公开资料未完全证实，上线前需自行核实。</p>
+  <p>威胁模型可以写成三句，供安全评审直接引用。第一，模型输出不可信：命令、补丁与 Codemode 脚本都按不可信代码处理。第二，提示注入在安全边界之外——框架不声称挡住「网页里藏指令」这类攻击。第三，项目信任只控制部分资源加载（例如项目级 MCP 与部分 packages），不是沙箱；AGENTS.md 与 CLAUDE.md 无论信任与否都会进入上下文。于是「打开一个别人的仓库并运行 pi」本身就是高风险操作，应在容器或微虚拟机里做。</p>
+  <p>扩展例子里的 permission-gate、protected-paths、confirm-destructive、sandbox/、gondolin/ 不是装饰目录，而是官方在告诉你：治理要自己装。Durable 走得更远：注册表永不持久化，对话只记住扩展名；名字对不上就静默跳过。宿主编排若允许「可选扩展」，等于允许「可选安全」。正确的公司默认是：强制 install 一组扩展，并在 <code>configure()</code> 里写死，使对话无法取消门闩。</p>
 </section>
 
 <section class="chapter" id="ch6">
   <div class="ch-num">Chapter 6</div>
-  <h2>Durable 的一条规则</h2>
-  <p class="lede">规范里的核心句只有一句：Session 原子地提交不可变条目、完整任务记录，以及 Chord 跟踪的文档。<strong>只有已提交状态可被观察。</strong></p>
-  <p>这句话几乎决定了后面所有 API 形状。若 UI 能显示一条「工具正在跑」的输出，那么这条输出必须已经（按节流间隔）进过存储；否则崩溃后会出现「用户见过、系统否认」的幽灵状态。反之，事务内禁止直接做网络调用：因为事务可能回滚，而网络请求不会回滚。于是副作用必须夹在两次提交之间——这就是下一章的三明治。</p>
-  <p>「毒化」机制同样来自这句话。当存储层返回不确定结果（例如写入是否成功未知）时，内存里的 Session 不再可信。继续用它，就会在「已提交」与「未提交」之间撒谎。唯一诚实的动作是 close，再从存储 reopen。宿主监督程序必须把 poison 当成一等故障信号，而不是普通异常。</p>
+  <h2>实验：进程死在工具中途时，你还剩什么</h2>
+  <p class="lede">现在做一次对照实验。假设模型已经决定调用 <code>bash</code> 去跑一条会改外部世界的命令（部署、发消息、写工单）。进程在「命令可能已经开始、结果还没写回会话」时被杀掉。问：磁盘上的会话、内存里的队列、外部系统，各自还剩什么？编码智能体与 Durable 的答案不同——这正是 Durable 存在的理由。</p>
 
-  <h3>分层</h3>
-  <p>从上到下：</p>
-  <ol>
-    <li><strong>Host（宿主）</strong>：你的应用进程、进程监督、身份、传输层。</li>
-    <li><strong>Harness</strong>：对话句柄、投递收件箱、任务调度、视图。</li>
-    <li><strong>Session 内核</strong>：一条变更行（mutation line）、Chord 文档跟踪。</li>
-    <li><strong>Storage</strong>：Memory / SQLite / JSONL（或通过一致性测试的自定义后端）。</li>
-  </ol>
+  <h3>失败样本：编码智能体（会话文件在，进行中工作不在）</h3>
+  <p>实验设定要故意残酷一点：不要选只读工具当唯一样本。只读失败时，外部世界没变，损失主要是时间；一写、一部署、一发通知，外部世界就有了「可能已发生」的分叉。框架若不能谈论这个分叉，运维就只能靠猜。</p>
+  <p>博客与手册用几乎同一句话概括缺口：编码智能体为「在你的（远程）机器上、终端里、一人驱动」而建；进程死了，你看对话记录，再告诉它继续。会话 JSONL 保住了已落盘的消息与已完成的工具结果，但<strong>不保证</strong>：内存里排队的 steer / follow-up、尚未写回的流式半截、以及「工具已经启动」这一事实。于是恢复路径是人类操作，不是调度器自动续跑检查点。</p>
 
-  <div class="fig" id="fig6">
-    <div class="fig-head"><span class="fig-id">图 6</span><h4 class="fig-title">Pi Durable 分层</h4></div>
+  <div class="fig" id="fig8">
+    <div class="fig-head"><span class="fig-id">图 8 · 互动</span><h4 class="fig-title">对照实验：崩溃瞬间的状态板</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img">
-  <rect x="80" y="20" width="560" height="44" rx="10" fill="#e8f1fc" stroke="#0071e3"/>
-  <text x="360" y="47" text-anchor="middle" font-size="14" font-family="system-ui" font-weight="600">Host：你的应用 · 监督 · 身份 · 传输</text>
-  <rect x="80" y="76" width="560" height="44" rx="10" fill="#fff" stroke="#d2d2d7"/>
-  <text x="360" y="103" text-anchor="middle" font-size="14" font-family="system-ui" font-weight="600">Harness：Conversations · Inbox · Scheduler · Views</text>
-  <rect x="80" y="132" width="560" height="44" rx="10" fill="#fff" stroke="#d2d2d7"/>
-  <text x="360" y="159" text-anchor="middle" font-size="14" font-family="system-ui" font-weight="600">Session 内核：mutation line · Chord documents</text>
-  <rect x="80" y="188" width="560" height="44" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
-  <text x="360" y="215" text-anchor="middle" font-size="14" font-family="system-ui" font-weight="600">Storage：Memory · SQLite · JSONL · custom</text>
-</svg>
+      <div class="btn-row">
+        <button type="button" class="btn primary" id="crashAgent">编码智能体崩溃</button>
+        <button type="button" class="btn" id="crashDurable">Durable（有 intent 提交）崩溃</button>
+        <button type="button" class="btn" id="crashReset">重置</button>
+      </div>
+      <div class="state-board" id="crashBoard">
+        <div class="state-cell" data-k="transcript"><div class="k">已落盘对话</div><div class="v">—</div></div>
+        <div class="state-cell" data-k="queue"><div class="k">内存队列</div><div class="v">—</div></div>
+        <div class="state-cell" data-k="tool"><div class="k">「工具已启动」记录</div><div class="v">—</div></div>
+        <div class="state-cell" data-k="partial"><div class="k">流式半截</div><div class="v">—</div></div>
+        <div class="state-cell" data-k="external"><div class="k">外部副作用</div><div class="v">—</div></div>
+        <div class="state-cell" data-k="resume"><div class="k">自动续跑</div><div class="v">—</div></div>
+      </div>
+      <div class="step-log" id="crashLog" aria-live="polite"><span class="dim">选择一种崩溃场景。观察哪些格子变绿（仍在）或变红（丢失 / 不确定）。</span></div>
     </div>
     <div class="fig-cap">
-      显示 Host 到 Storage 的四层结构。宿主拥有进程与身份。Harness 拥有调度与收件箱。
-      <span class="src">资料来源：Durable 手册 §1.2；packages/durable/README.md。</span>
+      编码智能体：对话在，进行中工作主要丢。Durable：提交过的 intent / 条目 / 任务记录在；副作用本身仍可能已发生且不可回滚。
+      <span class="src">资料：Durable 博文；manual §1.1；CF 文档重复「外部效果不回滚」。</span>
     </div>
   </div>
 
-  <h3>八条不变式里，公司最该记住的几条</h3>
-  <ul>
-    <li>先写入存储，再对外发布；不做「可见但不耐久」的发布。</li>
-    <li>副作用（调用外部世界）发生在事务之外。</li>
-    <li>ID 不可变。</li>
-    <li>若存储结果不确定，Session 被<strong>毒化（poison）</strong>：必须关闭并重新打开，不能 catch 了继续用。</li>
-  </ul>
+  <h3>加约束之后：什么必须先变成提交</h3>
+  <p>Durable 的回应不是「把整个 Node 堆快照下来」，而是收窄可观察面：凡是 UI 或其它客户端能看见的，必须先进入原子提交。流式局部结果按节流写入（默认约每 100 ms；<code>[manual vs code]</code> 自 1.0.3 起可通过 <code>partialIntervalMs</code> / <code>outputIntervalMs</code> 配置，默认仍为 100 ms）。工具意图在执行前提交。应用状态与条目、任务记录同一提交。于是「死在工具中途」时，你至少还剩一张诚实的支票：系统记得自己打算做什么；至于做了没有，要靠重放策略与你的幂等设计回答。</p>
+  <p>对照实验要读出三层结论，而不是停留在「Durable 更好」。第一层：编码智能体优化的是人类在场的终端劳动；崩溃后的续跑是对话行为，不是调度行为。第二层：Durable 优化的是应用在场——Slack、值班、长调查——崩溃后的续跑必须机器可做。第三层：两边都不替你解决外部世界的 exactly-once。谁先扣款、谁先建单、谁先发消息，仍然要靠幂等键与补偿。若有人把「Durable」听成「自动恰好一次」，那是营销听力，不是规格听力。</p>
+  <p>Kubernetes 上的轶事有助于建立场景感：有人曾用 DBOS 一类方案做会话存活，再换成 Pi Durable。这不是基准测试，只说明需求真实：Pod 被驱逐时，智能体若只能「留下聊天记录」，值班机器人就会停在半句话。换成提交化任务后，唤醒路径变成 reopen 与调度，而不是等人上班点继续。你的公司若没有这类场景，路径 1/2 可能已经足够，不必为了「新词」上实验库。</p>
 
-  <h3>一次输入大约十七次提交</h3>
-  <p>手册用捕获工具集演示：用户一条输入、模型调用一次工具，大约经历 <strong>17</strong> 次提交——创建对话与文档、写入用户条目、创建 generation / tool 任务、提交工具意图、提交工具结果与助手消息等。数字来自该捕获，不是性能 SLA；它说明的是设计密度：<strong>每个对外可见的事实都应对应一次可恢复的提交</strong>。</p>
-
-  <div class="fig" id="fig7">
-    <div class="fig-head"><span class="fig-id">图 7</span><h4 class="fig-title">一次工具调用的提交骨架（示意）</h4></div>
+  <div class="fig" id="fig9">
+    <div class="fig-head"><span class="fig-id">图 9</span><h4 class="fig-title">四种进行中状态（定性）</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" role="img">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0%" stop-color="#e8f1fc"/><stop offset="100%" stop-color="#eaf7ee"/></linearGradient></defs>
-  <rect x="20" y="50" width="680" height="36" rx="8" fill="url(#g)" stroke="#d2d2d7"/>
-  <g font-size="10" font-family="system-ui" fill="#1d1d1f">
-    <text x="45" y="72">open</text>
-    <text x="100" y="72">user</text>
-    <text x="155" y="72">gen</text>
-    <text x="210" y="72">partial*</text>
-    <text x="280" y="72">tool intent</text>
-    <text x="370" y="72">exec</text>
-    <text x="420" y="72">progress*</text>
-    <text x="500" y="72">result</text>
-    <text x="560" y="72">assistant</text>
-    <text x="640" y="72">settle</text>
-  </g>
-  <text x="360" y="120" text-anchor="middle" font-size="12" fill="#6e6e73" font-family="system-ui">*partial / progress 默认按 settings.progress 节流（默认 100ms）</text>
-  <text x="360" y="142" text-anchor="middle" font-size="12" fill="#86868b" font-family="system-ui">完整捕获约 17 commits（手册 §1.4）；本图为教学压缩</text>
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="20" y="30" width="160" height="140" rx="12" fill="#fdecee" stroke="#c41e3a"/>
+  <text x="100" y="60" text-anchor="middle" font-size="13" font-weight="600">内存队列</text>
+  <text x="100" y="90" text-anchor="middle" font-size="11" fill="#6e6e73">steer / follow-up</text>
+  <text x="100" y="120" text-anchor="middle" font-size="11" fill="#c41e3a">CLI：易丢</text>
+  <text x="100" y="145" text-anchor="middle" font-size="11" fill="#1a7f37">Durable：inbox</text>
+  <rect x="200" y="30" width="160" height="140" rx="12" fill="#fff4ec" stroke="#b54400"/>
+  <text x="280" y="60" text-anchor="middle" font-size="13" font-weight="600">流式半截</text>
+  <text x="280" y="90" text-anchor="middle" font-size="11" fill="#6e6e73">partial tokens</text>
+  <text x="280" y="120" text-anchor="middle" font-size="11" fill="#c41e3a">CLI：常丢</text>
+  <text x="280" y="145" text-anchor="middle" font-size="11" fill="#1a7f37">节流提交</text>
+  <rect x="380" y="30" width="160" height="140" rx="12" fill="#fff4ec" stroke="#b54400"/>
+  <text x="460" y="60" text-anchor="middle" font-size="13" font-weight="600">工具进行中</text>
+  <text x="460" y="90" text-anchor="middle" font-size="11" fill="#6e6e73">started?</text>
+  <text x="460" y="120" text-anchor="middle" font-size="11" fill="#c41e3a">CLI：无记录</text>
+  <text x="460" y="145" text-anchor="middle" font-size="11" fill="#1a7f37">intent 检查点</text>
+  <rect x="560" y="30" width="140" height="140" rx="12" fill="#eaf7ee" stroke="#1a7f37"/>
+  <text x="630" y="60" text-anchor="middle" font-size="13" font-weight="600">已完成条目</text>
+  <text x="630" y="90" text-anchor="middle" font-size="11" fill="#6e6e73">JSONL / entries</text>
+  <text x="630" y="120" text-anchor="middle" font-size="11" fill="#1a7f37">两者都保留</text>
+  <text x="630" y="145" text-anchor="middle" font-size="11" fill="#6e6e73">（已提交者）</text>
 </svg>
     </div>
     <div class="fig-cap">
-      显示一次输入到工具结果的主要提交阶段。完整捕获约十七次提交。本图为教学压缩。
-      <span class="src">资料来源：Durable 手册 §1.4；spec 核心规则。</span>
+      红/橙表示编码智能体常见缺口；绿表示 Durable 用提交补上的部分。外部副作用永不自动回滚。
+      <span class="src">资料：RESEARCH-BRIEF §B、§C2。</span>
     </div>
-  </div>
-
-  <div class="why">
-    <strong>为什么这样管用。</strong> 崩溃恢复不必「猜模型想到哪了」。只要重新打开存储，调度器就能根据已提交的任务检查点继续。你看到的任何 UI 状态，都应当能从存储重建——这比「再问模型一次你做到哪了」可靠得多。
   </div>
 </section>
 
 <section class="chapter" id="ch7">
   <div class="ch-num">Chapter 7</div>
-  <h2>工作即任务：副作用三明治与重放</h2>
-  <p class="lede">Durable 把进行中的工作建模为带检查点的状态机（任务）。外部世界的动作夹在两次提交之间：先提交意图，再执行，再提交结果。这叫<strong>副作用三明治（effect sandwich）</strong>。</p>
+  <h2>Durable 的一条规则：只有提交后的状态可观察</h2>
+  <p class="lede">规格里有一句被手册反复引用的核心规则：Session 原子地提交不可变条目、完整任务记录、以及 Chord 跟踪的文档；<strong>只有已提交状态可观察</strong>。八条不变量围着它，其中包括：先存后发、禁止易失发布、效果留在事务外、ID 不可变、不确定的存储失败会毒化 Session（必须关闭再开）。</p>
 
-  <h3>任务生命周期</h3>
-  <p>用 <code>defineTask(kind, version, initial, phases, abort, migrate?)</code> 定义。状态包括 pending / running / waiting / completing / terminal；结局包括 completed / failed / aborted / orphaned / faulted。一步若没有改变检查点，任务会因「无耐久进展」被 faulted。<code>sleep</code> 不是耐久的——deadline 应写进检查点。</p>
+  <p>把这句话翻译成工程直觉：客户端看到的每一个像素级事实，都应该能指出一次提交作为原因。你不能先把「正在打字」的半截真相广播出去再希望磁盘跟上——那会在崩溃后留下幽灵 UI。相反，先写入存储，再发布。效果（HTTP、bash、发邮件）不在事务里跑，否则你无法定义回滚；但意图与结局必须在事务里各留痕迹。</p>
+  <p>不确定的存储失败会毒化 Session：必须关闭再打开。这听起来粗暴，却避免了「半提交真相」继续向外扩散。宿主若吞掉毒化信号并继续提供旧视图，就会重新引入框架拼命排除的幽灵。监督进程的职责因此包括：识别毒化、切断视图、安全 reopen、必要时告警人工。Durable 不是把运维变没了，而是把运维从「猜模型在干嘛」变成「处理明确的会话生命周期事件」。</p>
 
-  <h3>可安全重放 vs 不可安全重放</h3>
-  <p>工具默认 <code>replay: "unsafe"</code>。崩溃恢复后，模型会收到一个 <em>interrupted</em> 结果，而不是自动再跑一遍。只有你确认工具幂等时，才标 <code>"safe"</code> 并允许重跑。内置的 read / write / edit / bash 都是 unsafe。<strong>外部副作用不会回滚。</strong>被打断的模型请求「可能付两次钱」。</p>
-  <p>把三种崩溃位置分开想，会清楚很多：</p>
-  <ol>
-    <li><strong>意图提交前崩溃：</strong>外部无事发生；重开后就像没开始。</li>
-    <li><strong>意图已提交、效果执行中/后、结果未提交：</strong>外部可能已变；重开时任务停在 intent 阶段。Unsafe 工具告诉模型「中断了」；Safe 工具可能再执行一次——所以 Safe 意味着幂等，而不是「框架会去重」。</li>
-    <li><strong>结果已提交后崩溃：</strong>事实已在对话里；恢复后继续下一阶段。</li>
-  </ol>
-  <p>博文里「requestId 让投递恰好一次」指的是第 0 步：同一投递不会被收件箱接受两次。它不覆盖第 2 种位置里的工具效果。HN 上的争论，本质是术语「exactly-once」被用在了不同层。</p>
-
-  <div class="callout warn">
-    <div class="label">Warning · 警告</div>
-    <p>不要把 requestId 的「恰好一次接受」理解成工具副作用恰好一次。requestId 是投递幂等键。工具效果仍要靠你的幂等键与补偿。</p>
-  </div>
-
-  <div class="fig" id="fig8">
-    <div class="fig-head"><span class="fig-id">图 8</span><h4 class="fig-title">交互：Durable 运行被打断后恢复</h4></div>
+  <div class="fig" id="fig10">
+    <div class="fig-head"><span class="fig-id">图 10</span><h4 class="fig-title">分层：Host → Harness → Session kernel → Storage</h4></div>
     <div class="fig-body">
-      <div class="btn-row">
-        <button type="button" class="btn primary" id="animPlay">逐步播放</button>
-        <button type="button" class="btn" id="animReset">重置</button>
-        <span class="status-pill idle" id="animStatus">idle</span>
-      </div>
-      <div class="slider-row">
-        <label for="animSlider" class="mono" style="font-size:12px;color:var(--text-3)">step</label>
-        <input type="range" id="animSlider" min="0" max="7" value="0"/>
-        <span id="animStepLabel" class="mono" style="font-size:12px;min-width:3ch">0</span>
-      </div>
-      <div class="step-log" id="animLog" aria-live="polite"></div>
-      <svg id="animSvg" viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" role="img" style="margin-top:10px">
-        <rect id="phCommit1" x="30" y="40" width="120" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
-        <text x="90" y="70" text-anchor="middle" font-size="12" font-family="system-ui">1 提交意图</text>
-        <rect id="phEffect" x="200" y="40" width="120" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
-        <text x="260" y="70" text-anchor="middle" font-size="12" font-family="system-ui">2 执行副作用</text>
-        <rect id="phCrash" x="370" y="40" width="120" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
-        <text x="430" y="70" text-anchor="middle" font-size="12" font-family="system-ui">3 崩溃</text>
-        <rect id="phReopen" x="540" y="40" width="150" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
-        <text x="615" y="70" text-anchor="middle" font-size="12" font-family="system-ui">4 重开 / 恢复</text>
-        <path d="M150,65 H195" stroke="#86868b"/><path d="M320,65 H365" stroke="#86868b"/><path d="M490,65 H535" stroke="#86868b"/>
-        <text id="animCaption" x="360" y="130" text-anchor="middle" font-size="12" fill="#6e6e73" font-family="system-ui">拖动滑块或点击播放</text>
-      </svg>
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="60" y="16" width="600" height="40" rx="8" fill="#e8f1fc" stroke="#0071e3"/>
+  <text x="360" y="42" text-anchor="middle" font-size="14" font-weight="600">Host（你的应用：身份、传输、监督）</text>
+  <rect x="60" y="66" width="600" height="40" rx="8" fill="#fff" stroke="#d2d2d7"/>
+  <text x="360" y="92" text-anchor="middle" font-size="14">Harness：对话句柄 · inbox · 任务调度 · views</text>
+  <rect x="60" y="116" width="600" height="40" rx="8" fill="#fff" stroke="#d2d2d7"/>
+  <text x="360" y="142" text-anchor="middle" font-size="14">Session kernel：单变异线 · Chord document trackers</text>
+  <rect x="60" y="166" width="600" height="40" rx="8" fill="#eaf7ee" stroke="#1a7f37"/>
+  <text x="360" y="192" text-anchor="middle" font-size="14">Storage：Memory / SQLite / JSONL（可自研 + 一致性套件）</text>
+</svg>
     </div>
     <div class="fig-cap">
-      演示副作用三明治：先提交意图，再执行，再提交结果。崩溃后重开存储。Unsafe 工具返回 interrupted。
-      <span class="src">资料来源：Durable 手册 §5.3–6.4；Cloudflare PiHarness recovery 说明。</span>
+      Durable 是库不是服务器。单进程拥有一份存储；无跨进程锁。
+      <span class="src">资料：packages/durable/README；manual §1.2。</span>
     </div>
   </div>
 
-  <h3>内置任务与所有权</h3>
-  <p>内置任务包括 <code>pi.generation</code>、<code>pi.tool</code>、<code>pi.compaction</code>。所有权树保证中止向下级联，abort 处理自下而上。调度器<strong>不会</strong>只因为注册表里缺代码就把任务标成终态——它会保持 pending 并显示 blocked，直到你装回对应扩展。这保护了数据，也意味着升级/热更新策略必须由你设计。</p>
+  <p>五种记录类型——conversation、entry、task、submission、document——共享一个 ID 计数器。对话是不可变条目的时间列表。任务是带检查点的状态机。提交（submission）是收件箱里的输入。文档是 Chord 跟踪的类型化 JSON。宿主通过 <code>Harness.open(storage, {models, registry, settings, env, onReport}, context)</code> 进入这个世界。打开 Harness 之后，你并没有自动获得身份系统或审批产品；你获得的是一套可以承载它们的提交与任务原语。把原语误认成产品，是试点失败的常见起点。</p>
+
+  <div class="callout warn">
+    <div class="label">[manual vs code]</div>
+    <p>手册描述 Durable 1.0.3；npm/仓库为 1.0.4。1.0.4 对 <code>ExecutionEnv.watch</code> 与一致性检查有破坏性调整；新增 <code>createPowerShellTool()</code>。以 CHANGELOG 为准。</p>
+  </div>
 </section>
 
 <section class="chapter" id="ch8">
   <div class="ch-num">Chapter 8</div>
-  <h2>对话、分叉、文档与扩展注册表</h2>
-  <p class="lede">Durable 的对话是按时间排列的不可变条目列表。分叉挂在另一条对话的某个条目上，继承历史但不复制。应用状态则是类型化的 JSON 文档，由 Chord 以基线 + 增量方式跟踪。</p>
+  <h2>一次用户输入大约十七次提交</h2>
+  <p class="lede">手册给出一个让人吃惊的粒度：一次用户输入若触发单次工具调用，大约会经历十七次提交。下面不是装饰性时间线，而是让你点开每一次：这一步之后，多了哪类记录、哪些字段从「不可见」变成「可观察」。数字来自手册对 1.0.3 机制的梳理；把它当作数量级与结构教材，而不是保证每个应用精确等于 17。</p>
 
-  <h3>分叉、重置、交接</h3>
-  <p>重置与交接只向前移动 head 标记，不删除历史。Cloudflare 文档也确认：目前还不能删除对话。Mario Zechner 在 HN 上说：「树还在，只是更扁了。」编码智能体的逐条 parent 树，与 Durable 的扁平对话 + 分叉祖先，是两种会话模型；公开迁移路径未见文档。</p>
-
-  <div class="fig" id="fig9">
-    <div class="fig-head"><span class="fig-id">图 9</span><h4 class="fig-title">编码智能体树 vs Durable 分叉（定性）</h4></div>
+  <div class="fig" id="fig11">
+    <div class="fig-head"><span class="fig-id">图 11 · 互动</span><h4 class="fig-title">十七次提交步进 / 点选</h4></div>
     <div class="fig-body">
-<div class="cmp-grid">
-  <div class="cmp-card">
-    <h5>Coding agent session tree</h5>
-    <p>每条条目有 parentId。UI 可浏览备选分支。适合个人探索。</p>
-  </div>
-  <div class="cmp-card">
-    <h5>Durable conversations + forks</h5>
-    <p>对话为线性不可变列表。分叉共享前缀历史。适合多表面长期应用。</p>
-  </div>
-</div>
+      <div class="btn-row">
+        <button type="button" class="btn" id="c17Prev">上一次</button>
+        <button type="button" class="btn primary" id="c17Next">下一次提交</button>
+        <button type="button" class="btn" id="c17Play">自动播放</button>
+        <button type="button" class="btn" id="c17Reset">重置</button>
+        <span class="status-pill run" id="c17Pill">0 / 17</span>
+      </div>
+      <div class="slider-row">
+        <input type="range" id="c17Slider" min="0" max="17" value="0"/>
+        <span id="c17Label">准备</span>
+      </div>
+      <div class="cmp-grid">
+        <ul class="commit-list" id="c17List" style="max-height:360px"></ul>
+        <div>
+          <div class="commit-detail" id="c17Detail">从 0 开始。每次提交都会点亮列表并更新右侧说明与下方状态摘要。</div>
+          <div class="state-board" id="c17State" style="margin-top:10px"></div>
+          <div class="step-log" id="c17Log" style="min-height:100px;max-height:160px"></div>
+        </div>
+      </div>
     </div>
     <div class="fig-cap">
-      对比两种会话模型。不要假设会话文件可自动迁移。
-      <span class="src">资料来源：docs/sessions.md；Durable 手册 §3；HN 讨论（maintainer）。</span>
+      示意序列：接纳 submission → 用户条目 → 启动 generation 任务 → 流式 partials → 工具意图 → 工具任务 → 工具结果条目 → 再生成 → 完成与 inbox 结算等。实际划分随实现细节变化。
+      <span class="src">资料：Durable Technical Manual §1.4、§2（约 17 commits）。</span>
     </div>
   </div>
 
-  <h3>文档（documents）</h3>
-  <p><code>defineDoc</code> 设定 scope（session / conversation / task）、history（latest / rewindable）、fork 策略（current / initial / asOf）、以及可选 <code>migrate</code> / <code>checkpointWhen</code>。没有 checkpointWhen 时，增量会一直增长。内置文档包括 <code>pi.agent</code>、<code>pi.provider</code>、<code>pi.live</code>、<code>pi.inbox</code>、<code>pi.usage</code>。</p>
+  <p>为什么要拆这么碎？因为每一刀都在回答崩溃恢复问题。若把「整轮智能体」当成一次提交，你要么丢失中间 UI，要么在重开时不知道工具是否跑过。拆开之后，调度器可以问：任务卡在哪个相位？检查点是否前进？缺代码时是该终止还是保持 pending（答案是：缺代码不终端化，保持 blocked/pending）？</p>
+  <p>逐步点开十七次提交时，请特别盯住「工具 intent 提交」与「工具 outcome 提交」之间的空隙。那是外部世界与存储世界短暂脱节的窗口。空隙里崩溃，不是框架写错了，而是框架把不确定性暴露给你。unsafe 默认选择「不要假装没发生过」，于是模型看到 interrupted；safe 选择「我相信重跑无害」，于是框架重做效果。两种都不是魔法，都是把责任分配写进默认值。</p>
+  <p>提交还与视图层绑定。多客户端通过 watch 看到的是提交后的投影；消费者落后过多会被折叠到最新值。这意味着实时协作更像「共享真相源」而不是「共享操作变换日志」。没有游标可续的晚加入者，从快照起步。产品经理若期望「像看回放一样拖进度条」，需要自建事件杂志——而规格把「语义事件杂志」列为非目标之一。</p>
 
-  <h3>扩展注册表：进程内代码，持久化的只是名字</h3>
-  <p>扩展是 <code>{name, tools, sections, hooks, wraps, tasks}</code>，安装进<strong>从不持久化</strong>的进程本地注册表。对话只保存扩展名字；未安装的名字会被<strong>静默跳过</strong>。七个钩子（beforeRequest、afterResponse、onYield、afterTools、beforeTool、afterTool、beforeCompact）都按扩展选择生效——<strong>没有全局钩子</strong>。你的权限扩展若没被该对话选中，防护就不存在。</p>
-  <p>这个设计对热更新极友好：同名再 install 一次即重载；正在跑的阶段继续用旧代码，到阶段边界才切到新代码。但对安全极不友好：持久化层无法证明「当时防护在场」。审计日志必须由宿主自己写。升级时若改了扩展名，旧对话会静默失去工具与钩子——属于规范里强调的 footgun。</p>
-  <p>子智能体在 Durable 里也不是一等 API，而是模式：前台子智能体是被调用工具任务拥有的子对话；后台则用锚点任务 + 报告任务。度假规划 demo 展示了如何把 safe 重放与后台工作拼起来。公司若需要「官方子代理产品」，要么自己做模式，要么选别的栈。</p>
-
-  <div class="callout danger">
-    <div class="label">Warning · 警告</div>
-    <p>把权限扩展做成「可选」等于把安全做成「可选」。在宿主层强制安装，并在创建对话时默认选中。</p>
-  </div>
-
-  <h3>收件箱：steer / follow-up / reject</h3>
-  <p>投递是 <code>input</code> 或 <code>write</code>；忙碌时策略 <code>whenBusy</code> 为 steer、followUp（默认）或 reject。<code>requestId</code>（每对话）或 Cloudflare 上的 <code>operationId</code> 充当幂等键。多个人「一起引导」的真实含义是：多个客户端连到<strong>同一个拥有存储的进程</strong>，由它扇出视图——不是多写者合并（那是明确非目标）。</p>
-
-  <div class="fig" id="fig10">
-    <div class="fig-head"><span class="fig-id">图 10</span><h4 class="fig-title">多客户端，单写入者</h4></div>
+  <div class="fig" id="fig12">
+    <div class="fig-head"><span class="fig-id">图 12</span><h4 class="fig-title">提交密度示意（一次工具调用）</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg" role="img">
-  <rect x="40" y="30" width="100" height="40" rx="8" fill="#e8f1fc" stroke="#0071e3"/><text x="90" y="55" text-anchor="middle" font-size="12" font-family="system-ui">Slack</text>
-  <rect x="40" y="90" width="100" height="40" rx="8" fill="#e8f1fc" stroke="#0071e3"/><text x="90" y="115" text-anchor="middle" font-size="12" font-family="system-ui">Web UI</text>
-  <rect x="40" y="140" width="100" height="30" rx="8" fill="#e8f1fc" stroke="#0071e3"/><text x="90" y="160" text-anchor="middle" font-size="12" font-family="system-ui">On-call</text>
-  <rect x="280" y="60" width="180" height="70" rx="12" fill="#fff" stroke="#1d1d1f" stroke-width="1.5"/>
-  <text x="370" y="90" text-anchor="middle" font-size="13" font-weight="600" font-family="system-ui">Owning process</text>
-  <text x="370" y="110" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="system-ui">Harness + Storage</text>
-  <rect x="540" y="70" width="140" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
-  <text x="610" y="100" text-anchor="middle" font-size="12" font-family="system-ui">SQLite / DO</text>
-  <path d="M140,50 H275" stroke="#0071e3"/><path d="M140,110 H275" stroke="#0071e3"/><path d="M140,155 H210 V95 H275" stroke="#0071e3"/>
-  <path d="M460,95 H535" stroke="#86868b"/>
-  <text x="370" y="30" text-anchor="middle" font-size="11" fill="#86868b" font-family="system-ui">views / watch · 无跨进程锁 · 无 CRDT 合并</text>
+<svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg" role="img" id="c17Bars">
+  <!-- bars filled by JS -->
 </svg>
     </div>
     <div class="fig-cap">
-      显示多个客户端连接到一个拥有存储的进程。不支持多写者合并。
-      <span class="src">资料来源：Durable README「One process owns…」；spec §13 非目标；手册 §8。</span>
+      横条表示提交序号；播放步进器时会依次点亮。
+      <span class="src">示意，非性能基准。</span>
     </div>
   </div>
 </section>
 
 <section class="chapter" id="ch9">
   <div class="ch-num">Chapter 9</div>
-  <h2>存储与部署：Node、Bun、Cloudflare</h2>
-  <p class="lede">Durable 是库，不是托管服务。你选存储后端，并保证「同一时间只有一个进程拥有该存储」。Cloudflare 的 PiHarness（beta）把这件事嵌进 Durable Object。</p>
-
-  <h3>三种内置后端</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>后端</th><th>耐久含义</th><th>手册基准（M3 Max，定性排序）</th></tr></thead>
-      <tbody>
-        <tr><td>Memory</td><td>进程退出即失</td><td>lookup ~0.44 µs；commit ~5.5 µs</td></tr>
-        <tr><td>SQLite（推荐）</td><td>WAL + <code>synchronous=NORMAL</code>：断电/主机故障时<strong>最新提交可能丢</strong></td><td>commit ~120 µs；重开 1k 条目 ~1.33 ms</td></tr>
-        <tr><td>JSONL</td><td>默认 <code>fsync</code> 关；撕裂尾会截断；损坏不自动修</td><td>commit ~792 µs；重开 ~249 ms</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p>一致性测试套件（存储约 23 例；执行环境手册写 21 例，1.0.4 又扩展了 watch 行为）是自定义后端/环境的门禁。两个进程打开同一 SQLite 文件可能铸造重复 ID并毒化记录。</p>
-
-  <div class="callout note">
-    <div class="label">Source note · 资料说明</div>
-    <p>博文「从灾难中恢复」与 SQLite NORMAL 语义之间存在张力。工程上应理解为：默认偏<strong>进程崩溃耐久</strong>，不是保证的断电耐久。可调同步设置，或接受风险。Cloudflare DO 的 SQLite 语义可能更强，但未在本材料中独立验证。</p>
-  </div>
-
-  <div class="fig" id="fig11">
-    <div class="fig-head"><span class="fig-id">图 11</span><h4 class="fig-title">存储后端：速度与耐久（定性 + 引用基准）</h4></div>
-    <div class="fig-body">
-<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img">
-  <text x="40" y="36" font-size="12" fill="#6e6e73" font-family="system-ui">相对 commit 耗时（手册 bench，越长越慢）</text>
-  <rect x="40" y="55" width="40" height="28" rx="6" fill="#e8f1fc" stroke="#0071e3"/>
-  <text x="100" y="74" font-size="13" font-family="system-ui">Memory · 最快 · 不耐久</text>
-  <rect x="40" y="100" width="120" height="28" rx="6" fill="#eaf7ee" stroke="#1a7f37"/>
-  <text x="180" y="119" font-size="13" font-family="system-ui">SQLite · 推荐 · 进程崩溃耐久（NORMAL）</text>
-  <rect x="40" y="145" width="280" height="28" rx="6" fill="#fff3d1" stroke="#8a6d00"/>
-  <text x="340" y="164" font-size="13" font-family="system-ui">JSONL · 更慢 · fsync 默认关</text>
-</svg>
-    </div>
-    <div class="fig-cap">
-      按手册存储基准显示相对 commit 成本。条长度示意，不等于精确比例尺。
-      <span class="src">资料来源：Durable 手册 §9 bench:storage（M3 Max）。</span>
-    </div>
-  </div>
-
-  <h3>Cloudflare PiHarness（beta）</h3>
-  <p>2026-10-02 宣布。它在 Agents SDK 的 Lifecycle 能力里运行 Pi Durable，用 Durable Object 的 SQLite（表前缀 <code>pi_</code>），并用 heartbeat job 唤醒对象。你仍自选 WebSocket / HTTP / RPC 传输。</p>
-  <ul>
-    <li>心跳约每 30 秒；驱逐、崩溃或部署（约 30 秒宽限期）后由 alarm 拉起并 reopen。</li>
-    <li>单次 alarm 调用最长约 15 分钟，约每 10 分钟交接；<strong>单次模型流超过 15 分钟可能被切断</strong>。</li>
-    <li>根 session id 为 <code>"1"</code>；建议一用户/一对话一个 DO。</li>
-    <li>无事件游标、无优雅排空、尚无对话删除、尚无内置审批。</li>
-  </ul>
-
-  <div class="fig" id="fig12">
-    <div class="fig-head"><span class="fig-id">图 12</span><h4 class="fig-title">Cloudflare 上的恢复路径（示意）</h4></div>
-    <div class="fig-body">
-<svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" role="img">
-  <rect x="30" y="55" width="110" height="50" rx="10" fill="#e8f1fc" stroke="#0071e3"/><text x="85" y="85" text-anchor="middle" font-size="12" font-family="system-ui">请求 / 事件</text>
-  <rect x="180" y="55" width="140" height="50" rx="10" fill="#fff" stroke="#d2d2d7"/><text x="250" y="78" text-anchor="middle" font-size="12" font-family="system-ui">Durable Object</text>
-  <text x="250" y="96" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="system-ui">PiHarness</text>
-  <rect x="360" y="55" width="130" height="50" rx="10" fill="#fff" stroke="#d2d2d7"/><text x="425" y="85" text-anchor="middle" font-size="12" font-family="system-ui">SQLite (pi_*)</text>
-  <rect x="530" y="55" width="160" height="50" rx="10" fill="#fff4ec" stroke="#b54400"/><text x="610" y="78" text-anchor="middle" font-size="12" font-family="system-ui">Alarm / heartbeat</text>
-  <text x="610" y="96" text-anchor="middle" font-size="11" fill="#6e6e73" font-family="system-ui">驱逐后唤醒</text>
-  <path d="M140,80 H175" stroke="#86868b"/><path d="M320,80 H355" stroke="#86868b"/><path d="M490,80 H525" stroke="#86868b"/>
-  <text x="360" y="140" text-anchor="middle" font-size="11" fill="#86868b" font-family="system-ui">适配器由 Cloudflare agents 提供（beta），不是 Earendil 包的一部分</text>
-</svg>
-    </div>
-    <div class="fig-cap">
-      显示事件进入 Durable Object，PiHarness 使用 SQLite，Alarm 在驱逐后唤醒。
-      <span class="src">资料来源：developers.cloudflare.com/agents/harnesses/pi/；2026-10-02 changelog。</span>
-    </div>
-  </div>
-
-  <h3>运行环境版本</h3>
-  <p>包声明 <code>engines: node &gt;=22.19.0</code>。Durable 的 SQLite 使用 <code>node:sqlite</code>，并通过可移植 facade 跑在 Bun 或 Cloudflare DO。编码智能体 SDK 可在 Node 或 Bun 上嵌入。</p>
-</section>
-
-<section class="chapter" id="ch10">
-  <div class="ch-num">Chapter 10</div>
-  <h2>成熟度、许可、治理与遥测</h2>
-  <p class="lede">编码智能体的 1.0 是「可以依赖」的稳定性叙事；同一时间发布的 Durable 被标为 experimental。公司决策必须把这两条线拆开看。</p>
+  <h2>副作用三明治与重放</h2>
+  <p class="lede">任务步骤的标准形状是：提交意图 → 执行效果 → 提交结局。这叫副作用三明治。重开时若落在意图相位，含义是：效果<strong>可能已经发生</strong>。默认工具标 <code>replay: "unsafe"</code>：崩溃后不重跑，模型收到 interrupted。只有你标明 <code>safe</code>（且工具确实幂等）才会重跑。外部效果绝不回滚；模型请求「可能付两次钱」。</p>
 
   <div class="fig" id="fig13">
-    <div class="fig-head"><span class="fig-id">图 13</span><h4 class="fig-title">1.0.x 发布时间线（已引用）</h4></div>
+    <div class="fig-head"><span class="fig-id">图 13 · 互动</span><h4 class="fig-title">中断 / 恢复动画（副作用三明治）</h4></div>
     <div class="fig-body">
-<svg viewBox="0 0 720 140" xmlns="http://www.w3.org/2000/svg" role="img">
-  <line x1="60" y1="70" x2="660" y2="70" stroke="#d2d2d7" stroke-width="3"/>
-  <g font-family="system-ui">
-    <circle cx="100" cy="70" r="8" fill="#0071e3"/><text x="100" y="40" text-anchor="middle" font-size="11" font-weight="600">1.0.0</text><text x="100" y="100" text-anchor="middle" font-size="10" fill="#6e6e73">10-01</text><text x="100" y="116" text-anchor="middle" font-size="10" fill="#6e6e73">Durable 首发</text>
-    <circle cx="240" cy="70" r="8" fill="#0071e3"/><text x="240" y="40" text-anchor="middle" font-size="11" font-weight="600">1.0.1</text><text x="240" y="100" text-anchor="middle" font-size="10" fill="#6e6e73">10-03</text>
-    <circle cx="380" cy="70" r="8" fill="#0071e3"/><text x="380" y="40" text-anchor="middle" font-size="11" font-weight="600">1.0.2</text><text x="380" y="100" text-anchor="middle" font-size="10" fill="#6e6e73">10-04</text>
-    <circle cx="520" cy="70" r="8" fill="#b54400"/><text x="520" y="40" text-anchor="middle" font-size="11" font-weight="600">1.0.3</text><text x="520" y="100" text-anchor="middle" font-size="10" fill="#6e6e73">10-05</text><text x="520" y="116" text-anchor="middle" font-size="10" fill="#b54400">含 Breaking</text>
-    <circle cx="640" cy="70" r="8" fill="#b54400"/><text x="640" y="40" text-anchor="middle" font-size="11" font-weight="600">1.0.4</text><text x="640" y="100" text-anchor="middle" font-size="10" fill="#6e6e73">10-05</text><text x="640" y="116" text-anchor="middle" font-size="10" fill="#b54400">含 Breaking</text>
-  </g>
-</svg>
+      <div class="btn-row">
+        <button type="button" class="btn primary" id="sandPlay">播放</button>
+        <button type="button" class="btn" id="sandReset">重置</button>
+        <span class="status-pill idle" id="sandStatus">idle</span>
+        <span id="sandStepLabel">0</span>
+      </div>
+      <div class="slider-row">
+        <input type="range" id="sandSlider" min="0" max="7" value="0"/>
+        <span id="sandCaption">拖动或播放</span>
+      </div>
+      <svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" role="img">
+        <rect id="phCommit1" x="40" y="40" width="140" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
+        <text x="110" y="70" text-anchor="middle" font-size="12">1. commit intent</text>
+        <rect id="phEffect" x="220" y="40" width="140" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
+        <text x="290" y="70" text-anchor="middle" font-size="12">2. effect</text>
+        <rect id="phCrash" x="400" y="40" width="120" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
+        <text x="460" y="70" text-anchor="middle" font-size="12">3. CRASH</text>
+        <rect id="phReopen" x="550" y="40" width="130" height="50" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
+        <text x="615" y="70" text-anchor="middle" font-size="12">4. reopen</text>
+        <text x="360" y="130" text-anchor="middle" font-size="12" fill="#6e6e73" id="sandHint">效果在事务外；意图与结局在事务内</text>
+      </svg>
+      <div class="step-log" id="sandLog" aria-live="polite"></div>
     </div>
     <div class="fig-cap">
-      显示五天内五个发布。1.0.3 与 1.0.4 含破坏性变更说明。
-      <span class="src">资料来源：packages/*/CHANGELOG.md（coding-agent 与 durable）。</span>
+      播放完整链路：intent → effect → crash → reopen → unsafe interrupted 或 safe 重跑 → commit outcome。
+      <span class="src">资料：manual §5–6；CF docs。</span>
     </div>
   </div>
 
   <div class="fig" id="fig14">
-    <div class="fig-head"><span class="fig-id">图 14</span><h4 class="fig-title">风险 / 成熟度矩阵（定性）</h4></div>
+    <div class="fig-head"><span class="fig-id">图 14 · 互动</span><h4 class="fig-title">Safe vs Unsafe 对照切换</h4></div>
     <div class="fig-body">
-      <div class="matrix" aria-label="maturity matrix">
-        <div class="cell hdr"></div>
-        <div class="cell hdr">API 稳定</div>
-        <div class="cell hdr">生产耐久</div>
-        <div class="cell hdr">安全默认</div>
-        <div class="cell rowh">Coding agent 1.0</div>
-        <div class="cell mid">中（仍有 patch breaking）</div>
-        <div class="cell lo">低（无进行中耐久）</div>
-        <div class="cell lo">低（无权限/沙箱）</div>
-        <div class="cell rowh">Pi Durable</div>
-        <div class="cell lo">低（experimental）</div>
-        <div class="cell mid">中（进程崩溃向）</div>
-        <div class="cell lo">低（无身份/审批）</div>
-        <div class="cell rowh">CF PiHarness</div>
-        <div class="cell lo">低（beta）</div>
-        <div class="cell mid">中（DO 生命周期）</div>
-        <div class="cell lo">低（同上）</div>
+      <div class="radio-row">
+        <label><input type="radio" name="replayPol" value="unsafe" checked/> unsafe（默认）</label>
+        <label><input type="radio" name="replayPol" value="safe"/> safe（仅幂等）</label>
+      </div>
+      <div class="cmp-grid">
+        <div class="cmp-card" id="replayCard">
+          <h5 id="replayTitle">unsafe</h5>
+          <p id="replayBody">崩溃后不重跑工具；向模型返回 interrupted。内置 read/write/edit/bash 皆 unsafe。</p>
+        </div>
+        <div class="cmp-card">
+          <h5>你仍须负责</h5>
+          <p id="replayExtra">幂等键、补偿事务、以及「intent 相位重开 = 效果可能已发生」的运维剧本。</p>
+        </div>
       </div>
     </div>
     <div class="fig-cap">
-      用定性等级总结三条线的稳定、耐久与安全默认。不是定量评分模型。
-      <span class="src">资料来源：README experimental 声明；CF beta 声明；security.md；CHANGELOG breaking。</span>
+      「Exactly-once」在博客口语里常指 submission 的 <code>requestId</code> 去重，不是工具效果恰好一次。
+      <span class="src">资料：manual；HN 讨论；RESEARCH-BRIEF §I.8。</span>
     </div>
   </div>
 
-  <h3>许可与治理</h3>
-  <ul>
-    <li>已发布包为 <strong>MIT</strong>（LICENSE © 2025 Mario Zechner）。<code>evals</code> 未许可。</li>
-    <li>商标与项目归属 Earendil Works。核心「MIT, forever」被作者称为不可谈判；未来可能有 Fair Source 增值与专有企业/云能力（「尚未构建」）。</li>
-    <li>无 CLA / DCO。新贡献者的 issue/PR 默认自动关闭，每日审阅——上游修复可能需要既有关系，或你自己 fork/patch。</li>
-    <li>Radius（radius.pi.dev，early alpha）已接入 <code>/login</code>、<code>/share</code>、<code>/bug</code>。</li>
-  </ul>
+  <p>任务用 <code>defineTask(kind, version, initial, phases, abort, migrate?)</code> 定义。状态含 pending / running / waiting / completing / terminal；结局含 completed / failed / aborted / orphaned / faulted。一步若不推进检查点，任务会因「无耐久进展」被 fault。内置任务包括 <code>pi.generation</code>、<code>pi.tool</code>、<code>pi.compaction</code>。<code>sleep</code> 不是耐久的。所有权树使 abort 向下级联，abort 处理器自下而上运行。</p>
+  <p>生成任务还有一组与运维相关的默认：手册记载默认约 3 次重试，基础延迟约 2000 ms、倍增、上限约 60_000 ms；上下文过长则压缩一次再试；延迟轮询默认 <code>pollAfterMs</code> 5000。工具输出默认有界限（约 50 KiB / 2000 行，保留头部）。这些数字不是 SLA，但足以提醒：长跑智能体的费用与延迟，大量发生在「重试与压缩」而不是「一次完美生成」。</p>
+  <p>子智能体在 Durable 里是模式而非独立 API：前台子智能体由调用方工具任务拥有；后台则用锚点任务加报告任务。费用账本 <code>pi.usage</code> 按对话记账，宿主若再按拥有关系粗加总，可能双计。试点时把账单对账列入验收，否则你会以为「模型变贵了」，其实是自己加了两遍。</p>
+</section>
 
-  <h3>遥测默认</h3>
-  <p><code>enableInstallTelemetry</code> 默认为 <strong>true</strong>（匿名安装/更新报告与部分提供方归因头）。<code>enableAnalytics</code> 默认 false。退出：<code>PI_TELEMETRY=0</code>；减少自动网络：<code>PI_OFFLINE=1</code> 或 <code>--offline</code>。精确载荷细节在本材料中未完整文档化——上线前应自行抓包验证。</p>
-  <p>治理上还有两件「慢变量」。其一是贡献门闩：新贡献者 PR 默认关闭，意味着你不能假设紧急 CVE 修复会从社区很快涌入；要有私有补丁分支能力。其二是开源核心之上的商业层：Radius 已出现在登录与分享路径里；Fair Source / 专有层「尚未构建」但已被宣示。MIT 允许分叉，却不能阻止商标与云服务分化——采购与法务应把「核心库」和「托管体验」写成两行风险。</p>
-  <p>成熟度叙事也要拆开：编码智能体 1.0 之后仍出现 patch 级 Breaking（例如 Azure 提供方重命名）；Durable 则明文 experimental，且 1.0.3/1.0.4 连续 Breaking（ExecutionEnv 合同）。对 SemVer 的企业直觉在这里不适用：<strong>精确 pin + 读 CHANGELOG + 跑一致性测试</strong>才是合同。</p>
+<section class="chapter" id="ch10">
+  <div class="ch-num">Chapter 10</div>
+  <h2>文档、分叉、收件箱</h2>
+  <p class="lede">会话树在编码智能体里是「每条有父指针」。Durable 把对话压成更扁的不可变条目列表：分叉挂在另一对话的某条条目上，继承到该点为止的历史而<strong>不复制</strong>。维护者在 HN 上说：树还在，只是更扁。重置与交接移动只进不退的 head 标记，什么也不删。Cloudflare 确认：尚不能删除对话。</p>
 
   <div class="fig" id="fig15">
-    <div class="fig-head"><span class="fig-id">图 15</span><h4 class="fig-title">与替代方案的原则对比（二级来源处已标注）</h4></div>
+    <div class="fig-head"><span class="fig-id">图 15 · 互动</span><h4 class="fig-title">树导航 vs 扁平分叉</h4></div>
     <div class="fig-body">
-      <div class="table-wrap" style="margin:0;border:0">
-        <table>
-          <thead><tr><th>选项</th><th>原则</th><th>与 Pi 的反差</th></tr></thead>
-          <tbody>
-            <tr><td>Claude Managed Agents</td><td>内置权限策略（always_allow / ask / auto）</td><td>Pi 模型无关、无内置权限；Durable 自托管或 CF</td></tr>
-            <tr><td>OpenAI Agents SDK + Temporal</td><td>工作流引擎提供耐久执行</td><td>Durable 把耐久嵌进 harness 存储，无独立集群</td></tr>
-            <tr><td>LangGraph checkpointer</td><td>图节点检查点；恢复时常从节点起点重跑</td><td>Pi 任务有显式阶段；宿主仍要监督进程</td></tr>
-            <tr><td>Temporal + LLM</td><td>强耐久、重放确定性、运维集群</td><td>Pi Durable 更轻、保证更弱（单写者）</td></tr>
-            <tr><td>CF Agents 无 Pi</td><td>自带循环或 Project Think</td><td>PiHarness 交出循环/转录/恢复给 Pi</td></tr>
-          </tbody>
-        </table>
+      <div class="btn-row">
+        <button type="button" class="btn primary" id="forkTree">编码智能体：树</button>
+        <button type="button" class="btn" id="forkFlat">Durable：fork 继承</button>
       </div>
+      <svg id="forkSvg" viewBox="0 0 720 180" xmlns="http://www.w3.org/2000/svg" role="img"></svg>
+      <div class="commit-detail" id="forkDetail">选择视图。</div>
     </div>
     <div class="fig-cap">
-      按设计原则对比替代方案。竞品行来自二级文档片段，细节需自行复核。
-      <span class="src">资料来源：RESEARCH-BRIEF 附录；LangChain / Temporal / Claude / CF 文档片段。</span>
+      两种模型都支持探索；迁移路径未在公开文档中完整规定。Durable 演示省略了树导航 UI。
+      <span class="src">资料：sessions.md；Durable 博文 / HN；CF docs。</span>
     </div>
   </div>
+
+  <h3>文档（Chord）</h3>
+  <p><code>defineDoc</code> 设定 scope（session / conversation / task）、history（latest / rewindable）、fork 策略（current / initial / asOf）、migrate 与 <code>checkpointWhen</code>。存储形态是 base 加 Chord op 增量。没有 <code>checkpointWhen</code>，增量会一直增长。内置文档包括 <code>pi.agent</code>、<code>pi.provider</code>、<code>pi.live</code>、<code>pi.inbox</code>、<code>pi.usage</code>。注意：<code>pi.usage</code> 按对话记账；若把子智能体费用再按拥有关系粗加总，可能双计。</p>
+
+  <h3>收件箱：steer / followUp / reject</h3>
+  <p>每条 submission 是 <code>input</code> 或 <code>write</code>，并带 <code>whenBusy</code>：steer（当前工具轮后注入）、followUp（默认，跑完再处理）、reject。对话级 <code>requestId</code> 或 Cloudflare 上的 <code>operationId</code> 充当幂等键——保证的是<strong>接纳恰好一次</strong>，不是副作用恰好一次。</p>
+
+  <div class="fig" id="fig16">
+    <div class="fig-head"><span class="fig-id">图 16 · 互动</span><h4 class="fig-title">whenBusy 决策器</h4></div>
+    <div class="fig-body">
+      <div class="radio-row" id="inboxRadios">
+        <label><input type="radio" name="whenBusy" value="steer" checked/> steer</label>
+        <label><input type="radio" name="whenBusy" value="followUp"/> followUp（默认）</label>
+        <label><input type="radio" name="whenBusy" value="reject"/> reject</label>
+      </div>
+      <div class="commit-detail" id="inboxDetail"></div>
+    </div>
+    <div class="fig-cap">
+      忙碌时的三条策略对应不同产品语义：打断当前、排队、或拒绝。
+      <span class="src">资料：manual §6.1；CF PiHarness。</span>
+    </div>
+  </div>
+
+  <p>多玩家意味着：多个客户端连到<strong>同一个拥有存储的进程</strong>，通过 <code>viewState</code> / <code>watch</code> 看同一真相。没有 CRDT、没有多写者合并（规格 §13 非目标）、API 也不识别用户身份。落后超过约 100 帧的消费者会被折叠到最新值；晚加入者拿当前快照，没有流游标可续（Cloudflare 明确写了「没有 cursor」）。</p>
+  <p>因此「多人转向同一智能体」的正确图像不是「多人同时写会话文件」，而是「多人向单写者投递 submission，再订阅同一提交流」。身份、鉴权、审计主体名，全部要在 Host 层出现。若跳过这一层，你得到的是共享终端，而不是可追责的企业应用。</p>
 </section>
 
 <section class="chapter" id="ch11">
   <div class="ch-num">Chapter 11</div>
-  <h2>采纳决策指南</h2>
-  <p class="lede">多数公司今天即可认真评估路径 1–2（CLI / 嵌入）。路径 3–4（Durable / PiHarness）适合能吸收 API 变动、并自建安全层的试点。</p>
+  <h2>存储后端与 Cloudflare PiHarness</h2>
+  <p class="lede">存储是可插拔的：Memory（参考实现，退出即失）、SQLite（推荐；WAL + <code>synchronous=NORMAL</code> 时最新提交可能在掉电时丢失）、JSONL（默认不强制 fsync；截断损坏尾；<code>JsonlCorruptionError</code> 不自动修）。自定义后端须过一致性套件（手册称 23 例）。两进程同写一个 SQLite 文件可能铸造重复 ID，进而毒化或静默替换记录。</p>
 
-  <h3>交互式决策树</h3>
-  <div class="fig" id="fig16">
-    <div class="fig-head"><span class="fig-id">图 16</span><h4 class="fig-title">采纳路径决策树</h4></div>
+  <div class="fig" id="fig17">
+    <div class="fig-head"><span class="fig-id">图 17 · 互动</span><h4 class="fig-title">存储后端选择器</h4></div>
+    <div class="fig-body">
+      <div class="btn-row">
+        <button type="button" class="btn" data-store="memory">Memory</button>
+        <button type="button" class="btn primary" data-store="sqlite">SQLite</button>
+        <button type="button" class="btn" data-store="jsonl">JSONL</button>
+      </div>
+      <div class="cmp-grid">
+        <div class="cmp-card" id="storeCard">
+          <h5>SQLite</h5>
+          <p>手册基准（M3 Max，定性）：commit ~120 µs；重开 1k 条目 ~1.33 ms。推荐默认。</p>
+        </div>
+        <div class="cmp-card">
+          <h5>耐久含义</h5>
+          <p id="storeDur">进程崩溃可恢复已提交状态；掉电耐久取决于同步设置——「灾难恢复」口语 ≠ 保证掉电不丢最新提交。</p>
+        </div>
+      </div>
+      <svg viewBox="0 0 720 140" xmlns="http://www.w3.org/2000/svg" role="img" id="storeBars"></svg>
+    </div>
+    <div class="fig-cap">
+      基准来自手册 <code>bench:storage</code>，只作相对排序，不作 SLA。
+      <span class="src">资料：manual §9；durable README。</span>
+    </div>
+  </div>
+
+  <h3>Cloudflare：PiHarness 是适配器，不是 Earendil 产品</h3>
+  <p>Cloudflare Agents SDK 的 beta「Lifecycle capability」在 Durable Object 里跑 Pi Durable，提供带 <code>pi_</code> 前缀表的 SQLite 适配，并用 heartbeat job 唤醒对象。宣布于 2026-10-02。传输（WebSocket / HTTP / RPC）你自选。心跳约 30 s；驱逐、崩溃或部署（约 30 s 宽限期）后 alarm 重启对象并 reopen 存储。单次 alarm 调用最长约 15 分钟，约每 10 分钟交接；<strong>单次模型流超过 15 分钟可能被切断</strong>——这与「无限长对话」并不矛盾：对话可很长，单次流不能。根 session id 为 <code>"1"</code>；建议每用户或每聊天一个 DO。</p>
+
+  <div class="fig" id="fig18">
+    <div class="fig-head"><span class="fig-id">图 18 · 互动</span><h4 class="fig-title">CF 恢复路径步进</h4></div>
+    <div class="fig-body">
+      <div class="btn-row">
+        <button type="button" class="btn" id="cfPrev">上一步</button>
+        <button type="button" class="btn primary" id="cfNext">下一步</button>
+        <button type="button" class="btn" id="cfReset">重置</button>
+        <span class="status-pill idle" id="cfPill">0</span>
+      </div>
+      <div class="step-log" id="cfLog"></div>
+    </div>
+    <div class="fig-cap">
+      运行中 → 驱逐/崩溃 → alarm 唤醒 → reopen storage → 调度器续任务。检测滞后可达约 30 s。
+      <span class="src">资料：developers.cloudflare.com/agents/harnesses/pi/。</span>
+    </div>
+  </div>
+
+  <p><code>ExecutionEnv</code> 是 FileSystem 加 Shell；包内提供 <code>NodeExecutionEnv</code>。环境每次从已提交状态重建，重跑时 cwd 可能不同。自定义环境须过一致性套件（手册 21 例；1.0.4 扩展了 watch 相关用例）。可为每个对话提供独立沙箱（例子 29）。</p>
+  <p>单写者规则值得单独写成运维红线。文档写明：同一时间只有一个进程拥有一份存储，没有跨进程锁。两个写者可能铸造重复 ID，进而毒化记录或静默替换。实验性 durable coding agent 演示用锁文件自保；Cloudflare 用「每对话一个 Durable Object」自然满足单写者。自管部署若在 Kubernetes 上跑多副本抢同一 SQLite 文件，等于把一致性套件的反例直接搬进生产。</p>
+  <p>可移植性叙事也要拆开听。博客说可移植核心能在 Durable Object 里跑「配一个适配器」；适配器实际是 Cloudflare <code>agents</code> 里的 PiHarness，不是 Earendil 发布的包。责任边界因此分裂：库的行为看 Earendil 的 CHANGELOG；唤醒、alarm 上限、DO 生命周期看 Cloudflare 文档。试点评审应把两个变更源都列入值班手册。</p>
+</section>
+
+<section class="chapter" id="ch12">
+  <div class="ch-num">Chapter 12</div>
+  <h2>真正让 Durable 奏效的是什么（以及它不保证什么）</h2>
+  <p class="lede">到这里，机制已经铺开。值得停下来问一个 Wolfram 式的问题：既然只是「提交 + 任务状态机 + 单写者存储」，为什么它能支撑长跑智能体应用？哪些地方理论与工程其实还没保证完？</p>
+
+  <h3>奏效的部分</h3>
+  <p>若只记住营销句「能活过灾难」，你会买错保障。真正买到的是一套关于可见性的纪律，外加一套关于任务相位的词汇表。纪律让 UI 与存储对齐；词汇表让崩溃后的程序有话可说，而不是只有核心转储。</p>
+  <p>第一，它把「可见」与「已提交」绑死。人类与多客户端之所以能一起转向同一个智能体，不是因为有了神奇的实时数据库，而是因为任何人看见的状态都有提交因果。晚到的观众拿快照；落后的观众被折叠到最新——产品可以粗糙，但不会长期活在谎言里。</p>
+  <p>第二，副作用三明治把不确定性变成可叙述的运维事实。重开落在 intent，等于系统诚实地说：「我可能已经动过外部世界。」默认 unsafe 重放避免了盲目重做；safe 标记把责任推回给你——这正是该推回的地方。</p>
+  <p>第三，任务与文档把「进行中工作」从内存幽灵提升为可调度对象。缺扩展代码时不假装成功终结，而是挡住并等待注册——升级滚动时，这比静默标失败更可运营。压缩是任务而不是隐形魔法；摘要竞争用 stale-head 规则裁决；每次摘要尝试都可能产生费用。手册还提醒：摘要请求会截断工具结果（约 2000 字符）；压缩期间的编辑可能丢失——这是 footgun，不是罕见边角。长对话试点要把「压缩发生时用户仍在写入」列入演练脚本。</p>
+  <p>第四，库的体积与「几乎不在运行时检查脚枪」换来了可读性。博客称 Durable 大约一万五千行量级（不含测试）；不同清点方式给出一万七到一万九千行左右。<code>[manual vs code]</code> 行数口径不一，定性结论相同：小到一个团队可以读完。三十八条 API footgun 被写成合约而非「再加防御层」的邀请——这是显式的设计交易。</p>
+
+  <div class="fig" id="fig19">
+    <div class="fig-head"><span class="fig-id">图 19</span><h4 class="fig-title">奏效机制 vs 非保证（对照）</h4></div>
+    <div class="fig-body">
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="20" y="20" width="330" height="180" rx="12" fill="#eaf7ee" stroke="#1a7f37"/>
+  <text x="185" y="48" text-anchor="middle" font-size="14" font-weight="600" fill="#1a7f37">让它奏效</text>
+  <text x="40" y="78" font-size="12">可见 ⇒ 已提交</text>
+  <text x="40" y="102" font-size="12">intent / effect / outcome 分离</text>
+  <text x="40" y="126" font-size="12">任务检查点可恢复</text>
+  <text x="40" y="150" font-size="12">单写者简化一致性</text>
+  <text x="40" y="174" font-size="12">扩展名持久、代码进程内</text>
+  <rect x="370" y="20" width="330" height="180" rx="12" fill="#fdecee" stroke="#c41e3a"/>
+  <text x="535" y="48" text-anchor="middle" font-size="14" font-weight="600" fill="#c41e3a">不保证</text>
+  <text x="390" y="78" font-size="12">外部效果 exactly-once</text>
+  <text x="390" y="102" font-size="12">掉电必存最新提交</text>
+  <text x="390" y="126" font-size="12">跨进程锁 / 多写合并</text>
+  <text x="390" y="150" font-size="12">内置身份与审批</text>
+  <text x="390" y="174" font-size="12">API 稳定（experimental）</text>
+</svg>
+    </div>
+    <div class="fig-cap">
+      左列是设计真正买到的性质；右列是公司必须自建或接受的缺口。
+      <span class="src">综合 README、spec §12–13、CF 限制、博文措辞。</span>
+    </div>
+  </div>
+
+  <h3>不保证的部分（写进合同思维）</h3>
+  <p>它不保证外部副作用恰好一次。它不保证在 <code>synchronous=NORMAL</code> 的 SQLite 上掉电仍保住最新提交——「Durable」在此语境首先是进程崩溃耐久。它不提供跨进程锁、对话删除、流游标、自动第三方视图挂载、CRDT、JSONL 自动修复、或强制终止不合作扩展代码。它不识别用户；Cloudflare 侧也写明尚无工具审批步骤。规格仍写着 Pico5「尚未实现」——<strong>以代码为准，规格滞后</strong>。</p>
+  <p>与 Temporal 一类通用耐久执行引擎相比，Pi Durable 是嵌入式库：没有集群要运维，保证也更弱（单进程）。与 LangGraph 的 checkpointer 相比，两者都仍需宿主检测失败并重启；Pi 把相位与检查点写进任务模型，并把「重开即续跑」放进 <code>open()</code> 路径，但监督责任仍在你。与 Claude Managed Agents 的内置权限策略相比，Pi 是模型无关且权限外置。这些不是优劣榜，而是原则对照：你买的是哪一种「真相来源」。</p>
+
+  <div class="why">
+    <strong>为何有效（诚实版）。</strong> 因为智能体应用的核心痛点往往不是「模型不够聪明」，而是「崩溃后不知道世界与记忆谁先谁后」。Durable 强迫你把可见事实提交化，并把效果留在可叙述的不确定性里。它有效，是因为约束了谎言；它不够，是因为没替你约束外部世界。
+  </div>
+  <p>还可以用「负空间」理解设计：规格 §13 列出一整串故意不做的事——整 Session DOM、可见但非耐久的发布、语义事件杂志、自动检查点启发式、CRDT 多写合并、Chord op 的 SQL 翻译、JSONL 全局压缩或自动修复、强制杀死不合作扩展，等等。负空间不是懒，而是防止库重新长成你想逃离的那种全能运行时。公司若需要其中某一项，应在宿主层明确立项，而不是开 issue 期待内核「顺便做了」。</p>
+  <p>三十八条 footgun 被描述为合约：几乎不在运行时检查。这意味着类型与测试要由你补。一致性套件存在的意义，就是把「自定义存储 / 自定义环境」从口号变成可回归的门禁。没有这道门禁，一次看似无害的 FileSystem 封装就能在升级后让 watch 语义漂移（1.0.4 已示范）。读完本章，若你只记住一句话，记住这句：Durable 用小核心换取你在边界上的工程成熟度。</p>
+</section>
+
+
+<section class="chapter" id="ch12x">
+  <div class="ch-num">Interlude</div>
+  <h2>把机制翻译成验收问题</h2>
+  <p class="lede">在进入决策树之前，用一组可以写进试点验收的问题，把前面各章钉死。答不上来，就说明机制还没读透，清单分数没有意义。</p>
+  <p>当进程在工具执行中被杀死时，你的存储里是否看得到工具意图？若看不到，你跑的是「会话耐久」还是「进行中耐久」？重开之后，默认是 interrupted 还是重跑？谁为重跑的双写负责？流式半截有没有进入提交？节流间隔是否按环境调整过？</p>
+  <p>收件箱在忙碌时走 steer、followUp 还是 reject？幂等键落在 requestId 还是 Cloudflare 的 operationId？多人同时转向时，写者是不是仍然只有一个进程？权限扩展是强制配置，还是「文档里建议安装」？缺扩展名时，系统是失败鸣笛，还是静默跳过？</p>
+  <p>存储后端选了哪一个？有没有两副本抢同一文件的路径？一致性套件是否进 CI？升级到含 Breaking 的 patch 时，谁跑套件？在 Cloudflare 上，单次模型流是否可能超过十五分钟？没有游标时，前端掉线重连的产品语义是什么？毒化 Session 的告警接到了哪里？</p>
+  <p>这些问题故意不提供「标准答案」。它们的作用是暴露判断依据：若团队无法在白板上画出 intent→effect→outcome，并指出崩溃落点，那么 Durable 试点应从培训开始，而不是从接 Slack 开始。编码智能体路径同样有验收问题：沙箱是否强制、权限包是否不可卸、会话目录是否分级、遥测是否已核实载荷。</p>
+  <div class="fig" id="fig23">
+    <div class="fig-head"><span class="fig-id">图 23</span><h4 class="fig-title">验收问题地图（定性）</h4></div>
+    <div class="fig-body">
+<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" role="img">
+  <rect x="30" y="30" width="200" height="140" rx="12" fill="#e8f1fc" stroke="#0071e3"/>
+  <text x="130" y="70" text-anchor="middle" font-size="13" font-weight="600">崩溃与重放</text>
+  <text x="130" y="100" text-anchor="middle" font-size="11" fill="#6e6e73">intent 可见？</text>
+  <text x="130" y="120" text-anchor="middle" font-size="11" fill="#6e6e73">unsafe/safe？</text>
+  <text x="130" y="140" text-anchor="middle" font-size="11" fill="#6e6e73">双写谁负责？</text>
+  <rect x="260" y="30" width="200" height="140" rx="12" fill="#fff4ec" stroke="#b54400"/>
+  <text x="360" y="70" text-anchor="middle" font-size="13" font-weight="600">治理挂载</text>
+  <text x="360" y="100" text-anchor="middle" font-size="11" fill="#6e6e73">扩展强制？</text>
+  <text x="360" y="120" text-anchor="middle" font-size="11" fill="#6e6e73">静默跳过？</text>
+  <text x="360" y="140" text-anchor="middle" font-size="11" fill="#6e6e73">身份在 Host？</text>
+  <rect x="490" y="30" width="200" height="140" rx="12" fill="#eaf7ee" stroke="#1a7f37"/>
+  <text x="590" y="70" text-anchor="middle" font-size="13" font-weight="600">运行面</text>
+  <text x="590" y="100" text-anchor="middle" font-size="11" fill="#6e6e73">单写者？</text>
+  <text x="590" y="120" text-anchor="middle" font-size="11" fill="#6e6e73">套件进 CI？</text>
+  <text x="590" y="140" text-anchor="middle" font-size="11" fill="#6e6e73">15min 流？</text>
+</svg>
+    </div>
+    <div class="fig-cap">
+      三组验收问题对应第 6–11 章机制。答不出就不要只看清单分数。
+      <span class="src">本书归纳；非上游官方清单。</span>
+    </div>
+  </div>
+  <p>还有一个常被忽略的验收项：文档与代码冲突时，团队以谁为准。本书立场写在页眉与第 14 章——代码与 CHANGELOG 优先，手册标二级。若试点同学以手册 1.0.3 的 env 合约实现自定义 FileSystem，却在 1.0.4 上跑新一致性用例，失败不应被解释为「Pi 不稳定到不可用」，而应解释为「你锁定了过期合约」。版本锚定是机制的一部分，不是发布附言。</p>
+</section>
+
+
+  <p>最后用一段话收束机制阅读体验。智能体系统让人着迷的地方，常常是模型偶尔表现得「像懂了」。工程上真正决定能否上线的，却是另一些更无聊的问题：什么被写下了、什么只存在于内存、什么已经泄漏到外部世界、崩溃之后程序是否还诚实。Pi 编码智能体把无聊问题留给人类操作员；Pi Durable 把其中一部分变成提交与任务，但仍把外部世界的诚实留给你。公司若能分清这两层诚实，就不会在错误的层上寻找安全感。</p>
+<p>补充一句操作建议：把第 8 章的十七次提交与第 6 章的崩溃状态板在评审会上连着演示——先看「意图何时可观察」，再看「崩溃时还剩什么」。同一事实用两种控件交叉验证，比只读段落更难被口号带偏。</p>
+<section class="chapter" id="ch13">
+  <div class="ch-num">Chapter 13</div>
+  <h2>公司采纳：决策树、清单、90 日试点、风险</h2>
+  <p class="lede">机制讲完，才谈采纳。路径有四条，风险递增：编码智能体日常驱动；SDK/RPC 嵌入；自管 Pi Durable；Cloudflare PiHarness。多数公司今天合理的是前两条（加沙箱）。后两条适合能吸收 API 抖动、并愿意自建身份与审批的试点。</p>
+
+  <div class="fig" id="fig20">
+    <div class="fig-head"><span class="fig-id">图 20 · 互动</span><h4 class="fig-title">采纳决策树</h4></div>
     <div class="fig-body">
       <div id="decisionTree">
         <div class="tree-node active" data-node="start">
@@ -1028,29 +1069,62 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
           </div>
         </div>
       </div>
-      <div id="decisionResult" class="score-box" style="display:none"></div>
+      <div class="score-box" id="decisionResult" style="display:none;margin-top:12px"></div>
     </div>
     <div class="fig-cap">
-      按需求引导到四条采纳路径之一。回答改变建议。本工具不收集数据。
-      <span class="src">资料来源：RESEARCH-BRIEF §G 四条路径。</span>
+      按需点击。结果对应四条采纳路径的一句话建议。
+      <span class="src">资料：RESEARCH-BRIEF §G。</span>
     </div>
   </div>
 
-  <h3>就绪检查清单（勾选计分）</h3>
-  <div class="fig" id="fig17">
-    <div class="fig-head"><span class="fig-id">图 17</span><h4 class="fig-title">企业就绪检查清单</h4></div>
+  <div class="fig" id="fig21">
+    <div class="fig-head"><span class="fig-id">图 21</span><h4 class="fig-title">路径 × 能力需求（定性矩阵）</h4></div>
+    <div class="fig-body">
+      <div class="matrix" style="grid-template-columns: 100px repeat(4, 1fr);">
+        <div class="cell hdr"></div>
+        <div class="cell hdr">路径1 CLI</div>
+        <div class="cell hdr">路径2 嵌入</div>
+        <div class="cell hdr">路径3 Durable</div>
+        <div class="cell hdr">路径4 CF</div>
+        <div class="cell rowh">进行中耐久</div>
+        <div class="cell lo">低</div><div class="cell lo">低</div><div class="cell hi">高</div><div class="cell hi">高</div>
+        <div class="cell rowh">治理自建量</div>
+        <div class="cell mid">中</div><div class="cell mid">中</div><div class="cell hi">高</div><div class="cell hi">高</div>
+        <div class="cell rowh">API 抖动风险</div>
+        <div class="cell mid">中</div><div class="cell mid">中</div><div class="cell hi">高</div><div class="cell hi">很高</div>
+        <div class="cell rowh">今日可开工</div>
+        <div class="cell hi">高</div><div class="cell hi">高</div><div class="cell mid">试点</div><div class="cell mid">试点</div>
+      </div>
+    </div>
+    <div class="fig-cap">
+      定性矩阵，不是评分产品。Durable 与 CF 叠加 beta 适配器时抖动最高。
+      <span class="src">综合成熟度表 §F 与采纳路径 §G。</span>
+    </div>
+  </div>
+
+  <h3>路径要点（判断依据暴露）</h3>
+  <p>下面每条路径都写出「为何此时可选」与「必须自建什么」。决策树互动控件会把你导向其中一条，但最终签字前，请回到第 6–9 章确认：你是否真的理解 intent 窗口与 unsafe 默认。不理解就上路径 3/4，等于在实验 API 上叠加语义债务。</p>
+  <ol>
+    <li><strong>路径 1 · 编码智能体。</strong> 托管安装或 Nix；标准化 <code>settings.json</code>（遥测、包允许列表、MCP）；容器 / Gondolin / Docker Sandboxes；内部 Pi package 发放权限扩展。盯：无默认权限弹窗；项目信任非沙箱；patch 级破坏性变更（如 Azure provider 重命名）；会话含密钥。</li>
+    <li><strong>路径 2 · SDK / RPC。</strong> RPC 换语言无关隔离；SDK 换进程内控制。显式选择工具；勿假设 Codemode/MCP 已开。OpenClaw 曾用 SDK 深度嵌入，后来迁到自有 <code>@openclaw/agent-core</code>——说明可行，也说明分叉是可能终点。站点仍把 OpenClaw 当展示的说法已<strong>过时</strong>。</li>
+    <li><strong>路径 3 · 自管 Durable。</strong> SQLite + 每存储单进程监督；强制身份与 <code>beforeTool</code> 审批扩展；幂等工具标 safe；外部写做成带幂等键的任务（outbox 模式目前缺糖，维护者承认）；备份；pin 版本；CI 跑存储与 env 一致性套件。从 examples 00–31 与 vacation 演示起步。</li>
+    <li><strong>路径 4 · Cloudflare PiHarness。</strong> <code>Agent</code> + <code>lifecycle.use(new PiHarness(...))</code>；用入站事件 id 作 <code>operationId</code>。接受：实验库 + beta 适配器；15 分钟流上限；无审批；无事件游标；无删除。</li>
+  </ol>
+
+  <div class="fig" id="fig22">
+    <div class="fig-head"><span class="fig-id">图 22 · 互动</span><h4 class="fig-title">就绪清单计分（10 项）</h4></div>
     <div class="fig-body">
       <ul class="checklist" id="adoptChecklist">
-        <li><input type="checkbox" data-w="1"/> 已选定沙箱方案（容器 / micro-VM）并强制执行。</li>
-        <li><input type="checkbox" data-w="1"/> 内部权限扩展已强制安装，且创建对话默认启用。</li>
-        <li><input type="checkbox" data-w="1"/> 遥测策略已定（<code>PI_TELEMETRY</code> / settings）。</li>
-        <li><input type="checkbox" data-w="1"/> 包与 MCP 有准入名单；禁止任意 <code>pi install</code>。</li>
-        <li><input type="checkbox" data-w="1"/> 精确 pin 版本；CI 阅读 CHANGELOG。</li>
-        <li><input type="checkbox" data-w="1"/> （Durable）每存储单写者：锁 / 选主 / 每对话一个 DO。</li>
-        <li><input type="checkbox" data-w="1"/> （Durable）幂等工具标 safe；外部写做成带幂等键的任务。</li>
-        <li><input type="checkbox" data-w="1"/> （Durable）存储与 env 一致性测试在 CI 中运行。</li>
-        <li><input type="checkbox" data-w="1"/> 备份与毒化 Session 的 reopen 演练已做。</li>
-        <li><input type="checkbox" data-w="1"/> 法务已审 MIT + 商标 + 未来 Fair Source/专有边界。</li>
+        <li><input type="checkbox" data-w="1"/> 已用容器/微虚拟机运行；不把「项目信任」当隔离。</li>
+        <li><input type="checkbox" data-w="1"/> 内部权限包（permission-gate 类）已强制分发。</li>
+        <li><input type="checkbox" data-w="1"/> 遥测策略已定（<code>PI_TELEMETRY</code> / settings）；载荷已核实或默认关闭。</li>
+        <li><input type="checkbox" data-w="1"/> 版本精确 pin；CHANGELOG 纳入升级门禁。</li>
+        <li><input type="checkbox" data-w="1"/> （嵌入）工具显式开启；RPC/SDK 边界已选。</li>
+        <li><input type="checkbox" data-w="1"/> （Durable）每存储单写者；监督进程已设计。</li>
+        <li><input type="checkbox" data-w="1"/> （Durable）身份 + beforeTool 审批为必选扩展。</li>
+        <li><input type="checkbox" data-w="1"/> （Durable）幂等工具标 safe；外部写带幂等键。</li>
+        <li><input type="checkbox" data-w="1"/> （Durable）存储与 env 一致性测试进 CI。</li>
+        <li><input type="checkbox" data-w="1"/> 崩溃演练与 Breaking patch 升级演练已做；法务知悉 MIT/商标/未来分层。</li>
       </ul>
       <div class="score-box">
         <div class="score-num" id="adoptScore">0</div>
@@ -1058,18 +1132,18 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
       </div>
     </div>
     <div class="fig-cap">
-      勾选每项就绪控制。分数等于勾选数。先完成沙箱与权限，再扩大用户面。
-      <span class="src">资料来源：综合 security.md、Durable README、CHANGELOG、治理材料。</span>
+      先沙箱与权限，再扩大用户面；Durable 生产前补单写者与一致性测试。
+      <span class="src">综合 security.md、Durable README、治理材料。</span>
     </div>
   </div>
 
-  <h3>90 日试点计划（STE）</h3>
+  <h3>90 日试点（短句清单）</h3>
   <ol class="ste">
-    <li>第 1–2 周：用托管安装或 Nix 部署编码智能体。锁定 settings。仅在沙箱中运行。</li>
+    <li>第 1–2 周：托管安装或 Nix 部署编码智能体。锁定 settings。仅沙箱运行。</li>
     <li>第 3–4 周：发布内部权限包。选定 5–10 名工程师。收集失败模式。</li>
-    <li>第 5–6 周：若需要嵌入，先 RPC 后 SDK。保持工具显式开启。</li>
-    <li>第 7–10 周（可选 Durable）：用 SQLite 做内部 triage/Slack 试点。实现身份与 beforeTool 审批。运行一致性测试。</li>
-    <li>第 11–12 周：做崩溃演练与版本升级演练（故意升到含 Breaking 的 patch）。写去留报告。</li>
+    <li>第 5–6 周：若需嵌入，先 RPC 后 SDK。工具显式开启。</li>
+    <li>第 7–10 周（可选 Durable）：SQLite 做内部 triage/Slack 试点。身份与 beforeTool。跑一致性测试。</li>
+    <li>第 11–12 周：崩溃演练与含 Breaking 的 patch 升级演练。写去留报告。</li>
   </ol>
 
   <h3>风险登记册（摘要）</h3>
@@ -1078,52 +1152,84 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
       <thead><tr><th>风险</th><th>迹象</th><th>缓解</th></tr></thead>
       <tbody>
         <tr><td>Patch 级破坏性变更</td><td>CHANGELOG「Breaking Changes」</td><td>精确 pin；金丝雀；一致性测试</td></tr>
-        <tr><td>Durable API 漂移</td><td>README「changes without notice」</td><td>勿放关键路径；抽象宿主适配层</td></tr>
+        <tr><td>Durable API 漂移</td><td>README「changes without notice」</td><td>勿放关键路径；宿主适配层</td></tr>
         <tr><td>双写损坏存储</td><td>多副本打开同一文件</td><td>单写者；CF 上每对话一 DO</td></tr>
-        <tr><td>副作用重复</td><td>崩溃在 intent 阶段</td><td>幂等键；补偿；标 safe 须谨慎</td></tr>
+        <tr><td>副作用重复</td><td>崩溃在 intent 相位</td><td>幂等键；补偿；慎标 safe</td></tr>
         <tr><td>权限扩展未挂上</td><td>对话未选扩展名</td><td>宿主强制 install + configure</td></tr>
-        <tr><td>遥测/供应链</td><td>默认安装遥测；npm 传递依赖</td><td>PI_TELEMETRY=0；托管安装或 Nix</td></tr>
+        <tr><td>遥测 / 供应链</td><td>默认安装遥测；npm 传递依赖</td><td>PI_TELEMETRY=0；托管安装或 Nix</td></tr>
         <tr><td>CF 15 分钟流上限</td><td>长流被切断</td><td>拆分生成；测 alarm 交接</td></tr>
-        <tr><td>上游贡献门闩</td><td>新 PR 自动关闭</td><td>维护私有补丁分支</td></tr>
+        <tr><td>上游贡献门闩</td><td>新 PR 默认自动关闭</td><td>维护私有补丁分支</td></tr>
       </tbody>
     </table>
   </div>
+
+  <div class="callout caution">
+    <div class="label">Governance</div>
+    <p>核心 MIT「forever」；未来可能有 Fair Source 增值与专有企业/云功能（尚未建成）。商标属 Earendil。Radius（early alpha）已接入 /login、/share、/bug。无 CLA/DCO。「数百万人每周」类用户数属营销表述，未核实；npm 周下载含 CI/传递依赖，不能当用户数。</p>
+  </div>
+  <h3>与竞品的原则对照（不是功能清单赛）</h3>
+  <p>Claude Code / Managed Agents 走厂商一体化：内置权限策略与托管运行时。Cursor 走 IDE 内嵌闭源体验。OpenAI Agents SDK 常借 Temporal 补耐久。LangGraph 用图与 checkpointer，节点恢复时常从头重跑，且仍需外部检测失败。Temporal 本身是通用耐久执行引擎，保证强、运维重。Cloudflare Agents 也可以不用 Pi，而用自研循环或 Project Think。Pi 的位置是：模型无关的小循环 +（可选）嵌入式提交化耐久库；治理与身份默认外置。选它，等于选「可读的核心 + 自建边界」；不选它，往往是因为你更想买边界而不是造边界。</p>
+  <p>贡献模型也影响企业策略：新贡献者的 issue/PR 默认自动关闭、每日审阅。上游修复可能需要既有关系；计划里应预留 fork 或私有补丁分支。总线因子方面，项目属 VC 支持公司，关键决策集中；MIT 允许分叉，但商标与商业层（Radius、未来 Fair Source）仍由 Earendil 控制。这些不是拒绝理由，而是采购与架构评审必须写进纪要的句子。</p>
 </section>
 
-<section class="chapter sources" id="sources">
-  <div class="ch-num">Sources</div>
-  <h2>资料来源</h2>
+<section class="chapter sources" id="ch14">
+  <div class="ch-num">Chapter 14</div>
+  <h2>资料来源与冲突表</h2>
+  <p class="lede">权威顺序：源码与 CHANGELOG &gt; pi.dev / Cloudflare 文档 / Earendil 博文 &gt; 技术手册。手册是独立整理的二级材料。下表列出本书显式处理过的冲突。</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>主题</th><th>冲突</th><th>本书立场</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Durable 版本</td><td>手册 1.0.3 vs 代码 1.0.4</td><td>锚定 1.0.4；标 [manual vs code]</td></tr>
+        <tr><td>2</td><td>watch / env 一致性</td><td>1.0.4 Breaking</td><td>以 CHANGELOG 为准</td></tr>
+        <tr><td>3</td><td>进度节流 100 ms</td><td>曾似固定；现可配置</td><td>默认 100 ms，可配</td></tr>
+        <tr><td>4</td><td>Exactly-once</td><td>博客口语 vs 效果语义</td><td>仅 submission 接纳</td></tr>
+        <tr><td>5</td><td>灾难恢复 vs SQLite</td><td>营销 vs NORMAL 同步</td><td>进程崩溃耐久优先</td></tr>
+        <tr><td>6</td><td>审批</td><td>CF「尚无」vs 钩子模式</td><td>无内置；可自建；易漏挂</td></tr>
+        <tr><td>7</td><td>OpenClaw</td><td>站点展示 vs 已自研运行时</td><td>嵌入后分叉案例；站点过时</td></tr>
+        <tr><td>8</td><td>PiHarness 归属</td><td>「适配器」口语</td><td>Cloudflare agents 的 beta</td></tr>
+        <tr><td>9</td><td>编码智能体 SemVer</td><td>1.0 稳定 vs patch Breaking</td><td>SemVer 不可当企业合同</td></tr>
+        <tr><td>10</td><td>规格 Pico5</td><td>「未实现」仍在文档</td><td>代码权威，规格滞后</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>冲突表不是为了制造不安全感，而是为了训练团队的阅读习惯：遇到口号，先找可观察状态；遇到手册，先对 CHANGELOG；遇到竞品对照，先比原则再比功能表。下一节列出本书实际依赖的公开材料。</p>
+  <h3>主要来源</h3>
   <ol>
     <li><a href="https://pi.dev/" target="_blank" rel="noopener">https://pi.dev/</a></li>
-    <li><a href="https://earendil.com/posts/pi-1-0/" target="_blank" rel="noopener">https://earendil.com/posts/pi-1-0/</a></li>
-    <li><a href="https://earendil.com/posts/pi-durable/" target="_blank" rel="noopener">https://earendil.com/posts/pi-durable/</a></li>
-    <li><a href="https://mariozechner.at/posts/2026-04-08-ive-sold-out/" target="_blank" rel="noopener">I've sold out（治理与 MIT）</a></li>
+    <li><a href="https://earendil.com/posts/pi-1-0/" target="_blank" rel="noopener">Pi 1.0 博文</a>；<a href="https://earendil.com/posts/pi-durable/" target="_blank" rel="noopener">Pi Durable 博文</a></li>
+    <li><a href="https://mariozechner.at/posts/2026-04-08-ive-sold-out/" target="_blank" rel="noopener">治理与 MIT</a></li>
     <li>仓库 <code>earendil-works/pi</code> @ <code>28dcce2</code>：README、docs/*、packages/durable/*、CHANGELOG</li>
-    <li><a href="https://developers.cloudflare.com/agents/harnesses/pi/" target="_blank" rel="noopener">Cloudflare PiHarness</a>；<a href="https://developers.cloudflare.com/changelog/post/2026-10-02-pi-harness/" target="_blank" rel="noopener">2026-10-02 changelog</a></li>
-    <li><a href="https://docs.openclaw.ai/pi" target="_blank" rel="noopener">OpenClaw docs on Pi</a></li>
-    <li>HN: <a href="https://news.ycombinator.com/item?id=49925969" target="_blank" rel="noopener">item?id=49925969</a></li>
-    <li>npm registry 元数据（2026-10-06 拉取）：pi-coding-agent / pi-durable / pi-ai / chord</li>
-    <li>技术手册（二级）：Pi Technical Manual 1.0.4；Pi Durable Technical Manual 1.0.3 — 见 <code>MANUAL-ADDENDUM.md</code></li>
-    <li>竞品片段：LangGraph checkpointer；Temporal×Agents；Claude Managed Agents 权限策略</li>
+    <li><a href="https://developers.cloudflare.com/agents/harnesses/pi/" target="_blank" rel="noopener">Cloudflare PiHarness</a></li>
+    <li><a href="https://docs.openclaw.ai/pi" target="_blank" rel="noopener">OpenClaw on Pi</a></li>
+    <li>HN <a href="https://news.ycombinator.com/item?id=49925969" target="_blank" rel="noopener">item?id=49925969</a></li>
+    <li>npm 元数据（2026-10-06）；RESEARCH-BRIEF.md；MANUAL-ADDENDUM.md</li>
+    <li>技术手册（二级）：Pi 1.0.4；Durable 1.0.3</li>
+    <li>竞品原则对照（片段）：LangGraph、Temporal×Agents、Claude Managed Agents</li>
   </ol>
-  <div class="footer-note">
-    本 HTML 为单文件离线读本，供内部决策使用。数字均附来源；定性图已标明。作者工具链：研究简报 RESEARCH-BRIEF.md + 手册补遗 MANUAL-ADDENDUM.md + 仓库快照 28dcce2。
+
+  <div class="footnote">
+    未证实缺口（保持开放）：安装遥测精确载荷；CF DO SQLite 掉电语义相对 Node NORMAL；CLI 是否长期迁到 Durable；SemVer/LTS 书面政策；Fair Source 清单细节。
+  </div>
+
+  <p>若你把本书与 V1 对照：V1 更快给出路径与清单；V2 强迫你先看清提交与副作用，再签字。两者都保留，是因为不同读者入口不同——但同一家公司内部，架构评审应以 V2 的机制章节为准，把 V1 当作执行摘要的备忘，而不是反过来。</p>
+<div class="footer-note">
+    V2 · 机制深读。单文件离线 HTML。V1 决策简报版见相对路径 <a href="v1/">v1/</a>。禁止将 Wolfram《这就是 ChatGPT》正文、图或示例写入本书；仅学其「现象→机制→为何有效」写法。研究截止 Asia/Shanghai 2026-10-06。正文汉字约一万二千字量级（随修订浮动）；图与互动控件不计入该字数目标。已知缺口见第十四章；试点前请再核对最新版本 CHANGELOG。
   </div>
 </section>
-
 </main>
 </div>
-
 <script>
 (function () {
   'use strict';
 
-  // --- Progress + TOC highlight ---
+  // --- Progress + TOC ---
   const chapters = Array.from(document.querySelectorAll('.chapter'));
   const tocLinks = Array.from(document.querySelectorAll('#toc a'));
   const bar = document.getElementById('progressBar');
   const pct = document.getElementById('progressPct');
-
   function updateProgress() {
     const el = document.documentElement;
     const max = el.scrollHeight - el.clientHeight;
@@ -1132,59 +1238,273 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
     pct.textContent = p + '%';
     let current = chapters[0];
     const y = window.scrollY + 80;
-    for (const ch of chapters) {
-      if (ch.offsetTop <= y) current = ch;
-    }
-    tocLinks.forEach(a => {
-      a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
-    });
+    for (const ch of chapters) { if (ch.offsetTop <= y) current = ch; }
+    tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current.id));
   }
   window.addEventListener('scroll', updateProgress, { passive: true });
   updateProgress();
-
   document.getElementById('mobileTocBtn').addEventListener('click', () => {
     const sb = document.getElementById('sidebar');
     const show = sb.style.display === 'block';
     sb.style.display = show ? 'none' : 'block';
-    sb.style.position = 'fixed';
-    sb.style.left = '0';
-    sb.style.top = '0';
-    sb.style.zIndex = '50';
-    sb.style.boxShadow = 'var(--shadow)';
+    sb.style.position = 'fixed'; sb.style.left = '0'; sb.style.top = '0';
+    sb.style.zIndex = '50'; sb.style.boxShadow = 'var(--shadow)';
   });
 
-  // --- Fig 8: durable interrupt/resume animation ---
-  const steps = [
-    { status: 'idle', pill: 'idle', boxes: [], log: '<span class="dim">准备演示：一次工具调用的副作用三明治。</span>', cap: '拖动滑块或点击播放' },
-    { status: 'run', pill: 'run', boxes: ['phCommit1'], log: '<span class="hi">commit</span> 工具意图检查点（intent）。此时尚无外部副作用。', cap: '步骤 1：先提交意图' },
-    { status: 'run', pill: 'run', boxes: ['phCommit1', 'phEffect'], log: '<span class="hi">effect</span> 执行工具（例如 bash / HTTP）。副作用在事务外发生。', cap: '步骤 2：执行副作用' },
-    { status: 'crash', pill: 'crash', boxes: ['phCommit1', 'phEffect', 'phCrash'], log: '<span class="bad">CRASH</span> 进程在结果提交前死亡。外部世界可能已变；存储只有意图。', cap: '步骤 3：崩溃（结果未提交）' },
-    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phReopen'], log: '<span class="ok">reopen</span> 宿主再次打开存储。调度器看到 intent 阶段任务。', cap: '步骤 4：重开存储' },
-    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phReopen'], log: '<span class="hi">replay policy = unsafe</span>（默认）：不重跑工具；向模型返回 interrupted。', cap: '步骤 5：Unsafe → interrupted' },
-    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phEffect', 'phReopen'], log: '<span class="ok">若工具标 safe 且幂等</span>：允许重跑。仍需你的幂等键，避免双充/双写。', cap: '步骤 6：Safe 才重跑' },
-    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phEffect', 'phReopen'], log: '<span class="ok">commit outcome</span> 写入工具结果 / 中断结果。UI 仅显示已提交状态。', cap: '步骤 7：提交结局' }
+  // --- 1. Turn stepper (ch2) ---
+  const turnSteps = [
+    { pill: 'idle', title: '待命', log: '<span class="dim">尚未输入。会话树停留在上一轮 agent_settled 之后。</span>',
+      state: { session: 'idle', queue: '空', model: '—', tool: '—', disk: '无新条目' } },
+    { pill: 'run', title: '用户消息落盘', log: '<span class="hi">commit</span> 用户条目写入 JSONL（带 parent）。磁盘上多了一条可导航节点。',
+      state: { session: 'writing', queue: '空', model: '—', tool: '—', disk: '+user entry' } },
+    { pill: 'run', title: '组装上下文', log: '系统提示 + AGENTS.md/CLAUDE.md + 工具表 + 近端对话。通常不另写一条「可见消息」。',
+      state: { session: 'assemble', queue: '空', model: 'pending', tool: '—', disk: '同前' } },
+    { pill: 'run', title: '模型流式返回', log: '<span class="hi">stream</span> 局部 token 进入 UI。内层尝试 #1 开始。',
+      state: { session: 'streaming', queue: '空', model: 'streaming', tool: '—', disk: '可能节流写 partial（Durable）' } },
+    { pill: 'run', title: '工具调用出现', log: '模型请求 <code>read</code>。CLI：扩展钩子可门闩。Durable：先提交 intent。',
+      state: { session: 'tool_call', queue: '空', model: 'await tool', tool: 'read 意图', disk: '+tool intent?' } },
+    { pill: 'run', title: '执行工具', log: '<span class="warn">effect</span> 在事务外读文件。副作用（若有）此时发生。',
+      state: { session: 'tool_exec', queue: '空', model: 'await tool', tool: 'running', disk: 'intent 已在则保留' } },
+    { pill: 'run', title: '工具结果写回', log: '结果成为会话条目。内层时钟准备再问模型。',
+      state: { session: 'tool_done', queue: '空', model: 'retry', tool: 'done', disk: '+tool result' } },
+    { pill: 'run', title: '最终自然语言', log: '模型给出答复，不再请求工具。',
+      state: { session: 'answering', queue: '空', model: 'final', tool: '—', disk: '+assistant' } },
+    { pill: 'resume', title: 'agent_settled', log: '<span class="ok">agent_settled</span> 外层空闲。宿主此时才应接受下一条「新回合」输入。',
+      state: { session: 'settled', queue: '空', model: 'idle', tool: '—', disk: '回合完整' } }
   ];
-  const logEl = document.getElementById('animLog');
-  const slider = document.getElementById('animSlider');
-  const stepLabel = document.getElementById('animStepLabel');
-  const statusEl = document.getElementById('animStatus');
-  const caption = document.getElementById('animCaption');
-  const boxIds = ['phCommit1', 'phEffect', 'phCrash', 'phReopen'];
-  let playTimer = null;
-
-  function paint(i) {
-    const s = steps[i];
-    slider.value = String(i);
-    stepLabel.textContent = String(i);
-    statusEl.textContent = s.status;
-    statusEl.className = 'status-pill ' + s.pill;
-    caption.textContent = s.cap;
-    const prev = logEl.innerHTML ? logEl.innerHTML + '\n' : '';
-    // show cumulative log of steps up to i
+  let turnI = 0;
+  function paintTurn(i) {
+    turnI = i;
+    const s = turnSteps[i];
+    document.getElementById('turnSlider').value = String(i);
+    document.getElementById('turnLabel').textContent = i + ' / ' + (turnSteps.length - 1);
+    const pill = document.getElementById('turnPill');
+    pill.textContent = s.title;
+    pill.className = 'status-pill ' + s.pill;
     let html = '';
-    for (let k = 0; k <= i; k++) html += steps[k].log + (k < i ? '<br/>' : '');
-    logEl.innerHTML = html;
-    logEl.scrollTop = logEl.scrollHeight;
+    for (let k = 0; k <= i; k++) html += turnSteps[k].log + (k < i ? '<br/>' : '');
+    document.getElementById('turnLog').innerHTML = html;
+    const board = document.getElementById('turnState');
+    board.innerHTML = Object.keys(s.state).map(k =>
+      '<div class="state-cell"><div class="k">' + k + '</div><div class="v">' + s.state[k] + '</div></div>'
+    ).join('');
+  }
+  paintTurn(0);
+  document.getElementById('turnSlider').addEventListener('input', e => paintTurn(+e.target.value));
+  document.getElementById('turnPrev').onclick = () => paintTurn(Math.max(0, turnI - 1));
+  document.getElementById('turnNext').onclick = () => paintTurn(Math.min(turnSteps.length - 1, turnI + 1));
+  document.getElementById('turnReset').onclick = () => paintTurn(0);
+
+  // --- 2. Session tree clicker (ch3) ---
+  const treeData = {
+    root: { label: '用户：读 README', x: 80, y: 40, detail: '根用户消息。parent 为空或指向会话根。' },
+    a1: { label: '助手：tool_call', x: 260, y: 40, detail: '助手条目请求 read。仍在主链。' },
+    t1: { label: '工具结果', x: 440, y: 40, detail: '工具结果条目。压缩时不会在结果处切断。' },
+    a2: { label: '助手：答复', x: 620, y: 40, detail: '最终答复。主链终点之一。' },
+    fork: { label: '分叉：CHANGELOG', x: 440, y: 130, detail: '/fork 或替代枝：共享祖先，新会话文件或新枝生长。' }
+  };
+  function drawSessionTree(active) {
+    const svg = document.getElementById('sessionTreeSvg');
+    let g = '';
+    g += '<path d="M110,55 H240" stroke="#d2d2d7" stroke-width="2"/>';
+    g += '<path d="M300,55 H420" stroke="#d2d2d7" stroke-width="2"/>';
+    g += '<path d="M480,55 H600" stroke="#d2d2d7" stroke-width="2"/>';
+    g += '<path d="M440,70 V110" stroke="#0071e3" stroke-width="2" stroke-dasharray="4 3"/>';
+    Object.keys(treeData).forEach(id => {
+      const n = treeData[id];
+      const on = id === active;
+      g += '<rect x="' + (n.x - 70) + '" y="' + (n.y - 18) + '" width="140" height="40" rx="10" fill="' + (on ? '#e8f1fc' : '#fff') + '" stroke="' + (on ? '#0071e3' : '#d2d2d7') + '" stroke-width="' + (on ? 2 : 1) + '"/>';
+      g += '<text x="' + n.x + '" y="' + (n.y + 6) + '" text-anchor="middle" font-size="11" fill="#1d1d1f">' + n.label + '</text>';
+    });
+    svg.innerHTML = g;
+    document.getElementById('treeDetail').textContent = treeData[active].detail;
+  }
+  drawSessionTree('root');
+  document.getElementById('treeBtns').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-node]');
+    if (!b) return;
+    document.querySelectorAll('#treeBtns .btn').forEach(x => x.classList.remove('primary'));
+    b.classList.add('primary');
+    drawSessionTree(b.getAttribute('data-node'));
+  });
+
+  // --- 3. Guard contrast (ch5) ---
+  function setGuard(on) {
+    document.getElementById('guardOn').classList.toggle('primary', on);
+    document.getElementById('guardOff').classList.toggle('primary', !on);
+    const a = document.getElementById('guardCardA');
+    const b = document.getElementById('guardCardB');
+    if (on) {
+      a.className = 'cmp-card good';
+      a.innerHTML = '<h5>有 beforeTool / 门闩</h5><p>破坏性路径可被拦截；审批备忘可写入文档。仍须宿主强制 install + configure。</p>';
+      b.className = 'cmp-card';
+      b.innerHTML = '<h5>对照侧</h5><p>未挂上时：模型工具调用直达执行。Durable：「没有全局钩子」。</p>';
+    } else {
+      a.className = 'cmp-card';
+      a.innerHTML = '<h5>扩展名未选中</h5><p>对话配置里没有该扩展名 → 静默跳过。进程内注册表也不持久化。</p>';
+      b.className = 'cmp-card bad';
+      b.innerHTML = '<h5>无门闩</h5><p>等同默认不安全。公司风险：以为「装过扩展」=「每次对话都生效」。</p>';
+    }
+  }
+  document.getElementById('guardOn').onclick = () => setGuard(true);
+  document.getElementById('guardOff').onclick = () => setGuard(false);
+  setGuard(true);
+
+  // --- 4. Crash contrast (ch6) ---
+  function paintCrash(mode) {
+    const cells = {
+      agent: {
+        transcript: { v: '保留（已落盘）', kept: true },
+        queue: { v: '丢失', kept: false },
+        tool: { v: '通常无记录', kept: false },
+        partial: { v: '常丢失', kept: false },
+        external: { v: '可能已发生', kept: false },
+        resume: { v: '人工续跑', kept: false }
+      },
+      durable: {
+        transcript: { v: '保留（entries）', kept: true },
+        queue: { v: 'inbox 提交可在', kept: true },
+        tool: { v: 'intent 检查点在', kept: true },
+        partial: { v: '节流已提交者在', kept: true },
+        external: { v: '可能已发生·不回滚', kept: false },
+        resume: { v: '调度器续相位', kept: true }
+      }
+    };
+    const m = cells[mode];
+    const board = document.getElementById('crashBoard');
+    board.querySelectorAll('.state-cell').forEach(cell => {
+      const k = cell.getAttribute('data-k');
+      const info = m[k];
+      cell.className = 'state-cell ' + (info.kept ? 'kept' : 'gone');
+      cell.querySelector('.v').textContent = info.v;
+    });
+    const log = document.getElementById('crashLog');
+    if (mode === 'agent') {
+      log.innerHTML = '<span class="bad">编码智能体</span>：对话在；进行中工作主要丢。你看着 transcript 告诉它继续。<br/><span class="dim">「keeps the conversation, not the turn」</span>';
+      document.getElementById('crashAgent').classList.add('primary');
+      document.getElementById('crashDurable').classList.remove('primary');
+    } else {
+      log.innerHTML = '<span class="ok">Durable</span>：已提交的 intent/条目/任务在；重开后续相位。外部副作用仍可能已发生。<br/><span class="dim">Only committed state is observable.</span>';
+      document.getElementById('crashDurable').classList.add('primary');
+      document.getElementById('crashAgent').classList.remove('primary');
+    }
+  }
+  document.getElementById('crashAgent').onclick = () => paintCrash('agent');
+  document.getElementById('crashDurable').onclick = () => paintCrash('durable');
+  document.getElementById('crashReset').onclick = () => {
+    document.getElementById('crashBoard').querySelectorAll('.state-cell').forEach(c => {
+      c.className = 'state-cell'; c.querySelector('.v').textContent = '—';
+    });
+    document.getElementById('crashLog').innerHTML = '<span class="dim">选择一种崩溃场景。</span>';
+    document.getElementById('crashAgent').classList.remove('primary');
+    document.getElementById('crashDurable').classList.remove('primary');
+  };
+
+  // --- 5. Seventeen commits (ch8) ---
+  const commits17 = [
+    { t: '接纳 submission', d: 'inbox 写入一条 input；requestId 去重。状态：queued。' },
+    { t: 'submission → placed', d: '调度决定放置时机（steer/followUp 边界）。' },
+    { t: '用户 entry 提交', d: '不可变条目进入对话列表；自此可观察。' },
+    { t: '配置/agent 文档触碰', d: 'pi.agent 等文档可能更新（模型、工具、扩展名）。' },
+    { t: '启动 pi.generation', d: 'generation 任务 pending→running；检查点初始化。' },
+    { t: '请求前钩子边界', d: 'beforeRequest 等钩子；仍无外部模型副作用。' },
+    { t: '流式 partial #1', d: '节流提交局部输出（默认 ~100ms）。UI 只见已提交。' },
+    { t: '流式 partial #2', d: '继续累积；崩溃则保留已提交半截。' },
+    { t: '模型轮次落条目', d: '助手条目（含 tool_call）提交。' },
+    { t: '工具 intent 提交', d: '关键：执行前先留下「打算调用工具」的耐久事实。' },
+    { t: '启动 pi.tool 任务', d: '工具任务进入 running；相位指向 effect 前/中。' },
+    { t: '（效果发生）', d: 'bash/HTTP 等在事务外。存储尚无结局。' },
+    { t: '工具 outcome 提交', d: '结果或 interrupted 写入；工具任务推进。' },
+    { t: '工具结果 entry', d: '对话条目可观察；准备再生成。' },
+    { t: '再启动 generation', d: '第二次模型轮：消化工具结果。' },
+    { t: '最终助手条目', d: '自然语言答复提交；无更多工具。' },
+    { t: '任务完成 + inbox done', d: 'generation/tool 终端化；submission done；视图收敛。' }
+  ];
+  let c17 = 0, c17Timer = null;
+  function paintC17(i) {
+    c17 = i;
+    document.getElementById('c17Slider').value = String(i);
+    document.getElementById('c17Pill').textContent = i + ' / 17';
+    document.getElementById('c17Label').textContent = i === 0 ? '准备' : ('提交 #' + i);
+    const list = document.getElementById('c17List');
+    list.innerHTML = commits17.map((c, idx) => {
+      const n = idx + 1;
+      const on = i === n ? ' on' : (i > n ? ' on' : '');
+      return '<li class="' + (i === n ? 'on' : (i > n ? '' : '')) + '" data-i="' + n + '"><span class="n">' + n + '</span><span>' + c.t + '</span></li>';
+    }).join('');
+    // mark completed lightly
+    list.querySelectorAll('li').forEach(li => {
+      const n = +li.getAttribute('data-i');
+      if (n === i) li.classList.add('on');
+      else if (n < i) { li.style.opacity = '0.7'; }
+    });
+    const detail = document.getElementById('c17Detail');
+    if (i === 0) detail.textContent = '从 0 开始。点击列表或使用下一步，观察状态累积。';
+    else detail.innerHTML = '<strong>#' + i + ' · ' + commits17[i - 1].t + '</strong><br/>' + commits17[i - 1].d;
+    const st = document.getElementById('c17State');
+    st.innerHTML =
+      '<div class="state-cell' + (i >= 1 ? ' kept' : '') + '"><div class="k">submission</div><div class="v">' + (i >= 1 ? 'yes' : '—') + '</div></div>' +
+      '<div class="state-cell' + (i >= 3 ? ' kept' : '') + '"><div class="k">user entry</div><div class="v">' + (i >= 3 ? 'committed' : '—') + '</div></div>' +
+      '<div class="state-cell' + (i >= 10 ? ' kept' : '') + '"><div class="k">tool intent</div><div class="v">' + (i >= 10 ? 'committed' : '—') + '</div></div>' +
+      '<div class="state-cell' + (i >= 13 ? ' kept' : '') + '"><div class="k">tool outcome</div><div class="v">' + (i >= 13 ? 'committed' : '—') + '</div></div>' +
+      '<div class="state-cell' + (i >= 17 ? ' kept' : '') + '"><div class="k">settled</div><div class="v">' + (i >= 17 ? 'done' : 'running') + '</div></div>';
+    let log = '';
+    for (let k = 1; k <= i; k++) log += '<span class="hi">#' + k + '</span> ' + commits17[k - 1].t + (k < i ? '<br/>' : '');
+    document.getElementById('c17Log').innerHTML = log || '<span class="dim">尚未提交</span>';
+    // bars
+    const svg = document.getElementById('c17Bars');
+    let g = '';
+    for (let k = 1; k <= 17; k++) {
+      const x = 20 + (k - 1) * 40;
+      const on = k <= i;
+      g += '<rect x="' + x + '" y="40" width="32" height="40" rx="6" fill="' + (on ? '#0071e3' : '#e8e8ed') + '"/>';
+      g += '<text x="' + (x + 16) + '" y="100" text-anchor="middle" font-size="10" fill="#86868b">' + k + '</text>';
+    }
+    svg.innerHTML = g;
+  }
+  paintC17(0);
+  document.getElementById('c17Slider').addEventListener('input', e => { if (c17Timer) { clearInterval(c17Timer); c17Timer = null; } paintC17(+e.target.value); });
+  document.getElementById('c17Prev').onclick = () => { if (c17Timer) { clearInterval(c17Timer); c17Timer = null; } paintC17(Math.max(0, c17 - 1)); };
+  document.getElementById('c17Next').onclick = () => { if (c17Timer) { clearInterval(c17Timer); c17Timer = null; } paintC17(Math.min(17, c17 + 1)); };
+  document.getElementById('c17Reset').onclick = () => { if (c17Timer) { clearInterval(c17Timer); c17Timer = null; } paintC17(0); };
+  document.getElementById('c17Play').onclick = () => {
+    if (c17Timer) { clearInterval(c17Timer); c17Timer = null; return; }
+    if (c17 >= 17) paintC17(0);
+    c17Timer = setInterval(() => {
+      if (c17 >= 17) { clearInterval(c17Timer); c17Timer = null; return; }
+      paintC17(c17 + 1);
+    }, 700);
+  };
+  document.getElementById('c17List').addEventListener('click', ev => {
+    const li = ev.target.closest('li[data-i]');
+    if (!li) return;
+    if (c17Timer) { clearInterval(c17Timer); c17Timer = null; }
+    paintC17(+li.getAttribute('data-i'));
+  });
+
+  // --- 6. Sandwich animation (ch9) ---
+  const sandSteps = [
+    { status: 'idle', pill: 'idle', boxes: [], log: '<span class="dim">准备：副作用三明治演示。</span>', cap: '拖动或播放' },
+    { status: 'run', pill: 'run', boxes: ['phCommit1'], log: '<span class="hi">commit intent</span> 工具意图检查点。尚无外部副作用。', cap: '步骤 1：提交意图' },
+    { status: 'run', pill: 'run', boxes: ['phCommit1', 'phEffect'], log: '<span class="hi">effect</span> 执行工具。副作用在事务外。', cap: '步骤 2：执行副作用' },
+    { status: 'crash', pill: 'crash', boxes: ['phCommit1', 'phEffect', 'phCrash'], log: '<span class="bad">CRASH</span> 结果未提交。外部可能已变；存储只有意图。', cap: '步骤 3：崩溃' },
+    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phReopen'], log: '<span class="ok">reopen</span> 调度器看到 intent 相位任务。', cap: '步骤 4：重开' },
+    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phReopen'], log: '<span class="hi">replay=unsafe</span>：不重跑；模型收到 interrupted。', cap: '步骤 5：Unsafe' },
+    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phEffect', 'phReopen'], log: '<span class="ok">若 safe 且幂等</span>：可重跑；仍需你的幂等键。', cap: '步骤 6：Safe 路径' },
+    { status: 'resume', pill: 'resume', boxes: ['phCommit1', 'phEffect', 'phReopen'], log: '<span class="ok">commit outcome</span>。UI 仅显示已提交状态。', cap: '步骤 7：提交结局' }
+  ];
+  const boxIds = ['phCommit1', 'phEffect', 'phCrash', 'phReopen'];
+  let sandTimer = null;
+  function paintSand(i) {
+    const s = sandSteps[i];
+    document.getElementById('sandSlider').value = String(i);
+    document.getElementById('sandStepLabel').textContent = String(i);
+    const st = document.getElementById('sandStatus');
+    st.textContent = s.status; st.className = 'status-pill ' + s.pill;
+    document.getElementById('sandCaption').textContent = s.cap;
+    let html = '';
+    for (let k = 0; k <= i; k++) html += sandSteps[k].log + (k < i ? '<br/>' : '');
+    document.getElementById('sandLog').innerHTML = html;
     boxIds.forEach(id => {
       const el = document.getElementById(id);
       const on = s.boxes.includes(id);
@@ -1192,59 +1512,128 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
       el.setAttribute('stroke', on ? (id === 'phCrash' ? '#c41e3a' : id === 'phReopen' ? '#1a7f37' : '#0071e3') : '#d2d2d7');
     });
   }
-  paint(0);
-  slider.addEventListener('input', () => { if (playTimer) { clearInterval(playTimer); playTimer = null; } paint(+slider.value); });
-  document.getElementById('animReset').addEventListener('click', () => { if (playTimer) clearInterval(playTimer); playTimer = null; paint(0); });
-  document.getElementById('animPlay').addEventListener('click', () => {
-    if (playTimer) { clearInterval(playTimer); playTimer = null; return; }
-    let i = +slider.value;
-    if (i >= steps.length - 1) i = 0;
-    paint(i);
-    playTimer = setInterval(() => {
+  paintSand(0);
+  document.getElementById('sandSlider').addEventListener('input', e => { if (sandTimer) { clearInterval(sandTimer); sandTimer = null; } paintSand(+e.target.value); });
+  document.getElementById('sandReset').onclick = () => { if (sandTimer) clearInterval(sandTimer); sandTimer = null; paintSand(0); };
+  document.getElementById('sandPlay').onclick = () => {
+    if (sandTimer) { clearInterval(sandTimer); sandTimer = null; return; }
+    let i = +document.getElementById('sandSlider').value;
+    if (i >= sandSteps.length - 1) i = 0;
+    paintSand(i);
+    sandTimer = setInterval(() => {
       i += 1;
-      if (i >= steps.length) { clearInterval(playTimer); playTimer = null; return; }
-      paint(i);
+      if (i >= sandSteps.length) { clearInterval(sandTimer); sandTimer = null; return; }
+      paintSand(i);
     }, 1100);
-  });
+  };
 
-  // --- Adoption checklist score ---
-  const checks = document.querySelectorAll('#adoptChecklist input[type=checkbox]');
-  const scoreEl = document.getElementById('adoptScore');
-  const msgEl = document.getElementById('adoptMsg');
-  function score() {
-    let n = 0;
-    checks.forEach(c => { if (c.checked) n += 1; });
-    scoreEl.textContent = String(n);
-    let msg = '勾选已完成项。满分 10。分数是就绪提示，不是认证。';
-    if (n <= 3) msg = '就绪偏低：先完成沙箱、权限扩展与遥测策略，再扩大用户面。';
-    else if (n <= 6) msg = '部分就绪：适合受控试点；Durable 生产前补齐单写者与一致性测试。';
-    else if (n <= 9) msg = '较高就绪：仍建议做崩溃与 Breaking patch 升级演练。';
-    else msg = '清单项均已勾选：进入正式试点评审，并保留版本 pin 与演练节奏。';
-    msgEl.textContent = msg;
+  // --- 7. Safe/unsafe toggle ---
+  function paintReplay() {
+    const v = document.querySelector('input[name=replayPol]:checked').value;
+    const card = document.getElementById('replayCard');
+    if (v === 'unsafe') {
+      card.className = 'cmp-card';
+      document.getElementById('replayTitle').textContent = 'unsafe（默认）';
+      document.getElementById('replayBody').textContent = '崩溃后不重跑工具；向模型返回 interrupted。内置 read/write/edit/bash 皆 unsafe。';
+      document.getElementById('replayExtra').textContent = '避免盲目双写；但模型需处理中断；效果可能已发生。';
+    } else {
+      card.className = 'cmp-card good';
+      document.getElementById('replayTitle').textContent = 'safe（仅幂等）';
+      document.getElementById('replayBody').textContent = '允许重跑。只对真正幂等的工具使用。错误标记 = 重复收费/重复工单。';
+      document.getElementById('replayExtra').textContent = '配合幂等键与补偿；intent 相位重开仍表示效果可能已发生。';
+    }
   }
-  checks.forEach(c => c.addEventListener('change', score));
-  score();
+  document.querySelectorAll('input[name=replayPol]').forEach(r => r.addEventListener('change', paintReplay));
+  paintReplay();
 
-  // --- Decision tree ---
+  // --- 8. Fork vs tree (ch10) ---
+  function paintFork(mode) {
+    const svg = document.getElementById('forkSvg');
+    document.getElementById('forkTree').classList.toggle('primary', mode === 'tree');
+    document.getElementById('forkFlat').classList.toggle('primary', mode === 'flat');
+    if (mode === 'tree') {
+      svg.innerHTML = '<circle cx="120" cy="40" r="14" fill="#0071e3"/><circle cx="260" cy="40" r="14" fill="#fff" stroke="#0071e3"/><circle cx="400" cy="40" r="14" fill="#fff" stroke="#0071e3"/><circle cx="540" cy="40" r="14" fill="#fff" stroke="#0071e3"/><circle cx="400" cy="120" r="14" fill="#e8f1fc" stroke="#0071e3"/><path d="M134,40 H246 M274,40 H386 M414,40 H526 M400,54 V106" stroke="#d2d2d7" stroke-width="2"/><text x="360" y="170" text-anchor="middle" font-size="12" fill="#6e6e73">每条有 parent · /tree 导航 · /fork 新文件</text>';
+      document.getElementById('forkDetail').textContent = '编码智能体：显式树。分支是一等导航对象。';
+    } else {
+      svg.innerHTML = '<rect x="40" y="50" width="280" height="50" rx="10" fill="#e8f1fc" stroke="#0071e3"/><text x="180" y="80" text-anchor="middle" font-size="13">对话 A 条目列表（不可变）</text><rect x="400" y="50" width="280" height="50" rx="10" fill="#fff" stroke="#0071e3"/><text x="540" y="80" text-anchor="middle" font-size="13">对话 B fork@entry</text><path d="M320,75 H400" stroke="#0071e3" stroke-width="2" stroke-dasharray="4 3"/><text x="360" y="140" text-anchor="middle" font-size="12" fill="#6e6e73">继承至分叉点 · 不复制历史 · head 只进</text>';
+      document.getElementById('forkDetail').textContent = 'Durable：扁平列表 + fork 祖先。树还在，更扁。不能删除对话（截至公开文档）。';
+    }
+  }
+  document.getElementById('forkTree').onclick = () => paintFork('tree');
+  document.getElementById('forkFlat').onclick = () => paintFork('flat');
+  paintFork('tree');
+
+  // --- 9. Inbox whenBusy ---
+  const inboxText = {
+    steer: 'steer：在当前工具轮之后注入。适合「改方向但别丢掉本轮工具上下文」。',
+    followUp: 'followUp（默认）：等本轮跑完再处理。适合排队追加问题。',
+    reject: 'reject：忙碌时拒绝。适合背压与明确失败，而不是静默排队。'
+  };
+  function paintInbox() {
+    const v = document.querySelector('input[name=whenBusy]:checked').value;
+    document.getElementById('inboxDetail').textContent = inboxText[v];
+  }
+  document.querySelectorAll('input[name=whenBusy]').forEach(r => r.addEventListener('change', paintInbox));
+  paintInbox();
+
+  // --- 10. Storage selector ---
+  const stores = {
+    memory: { title: 'Memory', body: '参考实现；进程退出即失。手册：lookup ~0.44 µs，commit ~5.5 µs。', dur: '无耐久。只适合测试与一致性套件对照。', h: [90, 20, 10] },
+    sqlite: { title: 'SQLite（推荐）', body: 'commit ~120 µs；重开 1k 条目 ~1.33 ms（手册 M3 Max 定性）。', dur: '进程崩溃可恢复已提交；NORMAL 同步下掉电可能丢最新。', h: [40, 70, 55] },
+    jsonl: { title: 'JSONL', body: 'commit ~792 µs；重开 1k ~249 ms。默认 fsync 关；损坏尾截断。', dur: 'CorruptionError 不自动修。两进程同写危险。', h: [25, 45, 85] }
+  };
+  function paintStore(key) {
+    document.querySelectorAll('[data-store]').forEach(b => b.classList.toggle('primary', b.getAttribute('data-store') === key));
+    const s = stores[key];
+    document.getElementById('storeCard').innerHTML = '<h5>' + s.title + '</h5><p>' + s.body + '</p>';
+    document.getElementById('storeDur').textContent = s.dur;
+    const svg = document.getElementById('storeBars');
+    const labels = ['lookup 相对', 'commit 相对', 'reopen 相对'];
+    let g = '';
+    s.h.forEach((h, i) => {
+      const x = 80 + i * 200;
+      g += '<text x="' + (x + 40) + '" y="20" text-anchor="middle" font-size="11" fill="#6e6e73">' + labels[i] + '</text>';
+      g += '<rect x="' + x + '" y="' + (120 - h) + '" width="80" height="' + h + '" rx="6" fill="#0071e3" opacity="0.85"/>';
+    });
+    svg.innerHTML = g;
+  }
+  document.querySelectorAll('[data-store]').forEach(b => b.addEventListener('click', () => paintStore(b.getAttribute('data-store'))));
+  paintStore('sqlite');
+
+  // --- 11. CF recovery stepper ---
+  const cfSteps = [
+    'DO 内 PiHarness 运行；Lifecycle heartbeat ~30s；工作 pending 时保持唤醒。',
+    '驱逐 / 崩溃 / 部署（~30s 宽限）→ 对象休眠，进行中流可能中断。',
+    'alarm 触发 → 对象重启 → Pi reopen storage（SQLite pi_ 表）。',
+    '调度器看到未终端任务 → 按相位续跑（intent 则走重放策略）。',
+    '注意：单次模型流 >15 分钟可能被切断；无 stream cursor；无内置审批。'
+  ];
+  let cfI = 0;
+  function paintCf(i) {
+    cfI = i;
+    document.getElementById('cfPill').textContent = String(i);
+    let html = '';
+    for (let k = 0; k <= i; k++) html += '<span class="hi">[' + k + ']</span> ' + cfSteps[k] + (k < i ? '<br/>' : '');
+    document.getElementById('cfLog').innerHTML = html;
+  }
+  paintCf(0);
+  document.getElementById('cfPrev').onclick = () => paintCf(Math.max(0, cfI - 1));
+  document.getElementById('cfNext').onclick = () => paintCf(Math.min(cfSteps.length - 1, cfI + 1));
+  document.getElementById('cfReset').onclick = () => paintCf(0);
+
+  // --- 12. Decision tree ---
   const treeRoot = document.getElementById('decisionTree');
   const resultBox = document.getElementById('decisionResult');
   const nodes = {
-    start: null, // already in DOM
-    coding: {
-      q: '主要用途是个人/团队终端提效，还是嵌入到内部产品？',
-      a: [{ label: '终端提效', goto: 'path1' }, { label: '嵌入产品', goto: 'path2' }]
-    },
-    durable: {
-      q: '运行面更接近自管 Node/Bun，还是已在 Cloudflare Workers/DO？',
-      a: [{ label: 'Node / Bun + SQLite', goto: 'path3' }, { label: 'Cloudflare DO', goto: 'path4' }]
-    },
-    path1: { result: '路径 1 · 编码智能体日常驱动', detail: '风险最低、现成可用。用托管安装或 Nix；强制沙箱与内部权限包；标准化 settings 与遥测策略。' },
-    path2: { result: '路径 2 · SDK / RPC 嵌入', detail: 'RPC 换进程隔离；SDK 换进程内控制。SDK 默认关闭 Codemode/MCP。记住：JSONL 会话无进行中耐久。OpenClaw 案例表明深度产品化后可能分叉运行时。' },
-    path3: { result: '路径 3 · Pi Durable（自管）', detail: '适合 Slack/值班/长调查试点。SQLite + 单写者监督；自建身份与 beforeTool 审批；pin 版本并跑一致性测试。API 为 experimental。' },
-    path4: { result: '路径 4 · Cloudflare PiHarness', detail: '实验库 + beta 适配器叠加。DO 帮你解决单写者与唤醒。注意 15 分钟流上限、无游标、无内置审批。用 operationId 做幂等。' }
+    coding: { q: '主要用途是个人/团队终端提效，还是嵌入到内部产品？', a: [{ label: '终端提效', goto: 'path1' }, { label: '嵌入产品', goto: 'path2' }] },
+    durable: { q: '运行面更接近自管 Node/Bun，还是已在 Cloudflare Workers/DO？', a: [{ label: 'Node / Bun + SQLite', goto: 'path3' }, { label: 'Cloudflare DO', goto: 'path4' }] },
+    path1: { result: '路径 1 · 编码智能体日常驱动', detail: '风险最低、现成可用。托管安装或 Nix；强制沙箱与内部权限包；标准化 settings 与遥测。' },
+    path2: { result: '路径 2 · SDK / RPC 嵌入', detail: 'RPC 换进程隔离；SDK 换进程内控制。SDK 默认关闭 Codemode/MCP。JSONL 无进行中耐久。OpenClaw：嵌入后可能分叉。' },
+    path3: { result: '路径 3 · Pi Durable（自管）', detail: 'Slack/值班/长调查试点。SQLite + 单写者；自建身份与 beforeTool；pin 版本；一致性测试。API experimental。' },
+    path4: { result: '路径 4 · Cloudflare PiHarness', detail: '实验库 + beta 适配器。DO 解决单写者与唤醒。注意 15 分钟流、无游标、无内置审批。用 operationId 幂等。' }
   };
-
-  treeRoot.addEventListener('click', (ev) => {
+  const startHTML = treeRoot.innerHTML;
+  treeRoot.addEventListener('click', ev => {
     const btn = ev.target.closest('button[data-goto]');
     if (!btn) return;
     const goto = btn.getAttribute('data-goto');
@@ -1253,19 +1642,31 @@ button.btn:disabled { opacity: .45; cursor: not-allowed; }
     if (node.result) {
       resultBox.style.display = 'flex';
       resultBox.innerHTML = '<div><div class="score-num" style="font-size:18px;margin-bottom:6px">' + node.result + '</div><div class="score-msg">' + node.detail + '</div><div class="btn-row" style="margin-top:10px"><button type="button" class="btn" id="treeReset">重来</button></div></div>';
-      document.getElementById('treeReset').onclick = () => {
-        resultBox.style.display = 'none';
-        treeRoot.innerHTML = '<div class="tree-node active" data-node="start"><div class="tree-q">你是否需要进程崩溃后自动恢复「进行中」的工具/模型轮次？</div><div class="btn-row"><button type="button" class="btn primary" data-goto="durable">需要</button><button type="button" class="btn" data-goto="coding">不需要</button></div></div>';
-      };
+      document.getElementById('treeReset').onclick = () => { resultBox.style.display = 'none'; treeRoot.innerHTML = startHTML; };
       return;
     }
     treeRoot.innerHTML = '<div class="tree-node active"><div class="tree-q">' + node.q + '</div><div class="btn-row">' +
-      node.a.map(x => '<button type="button" class="btn' + (x.goto.startsWith('path') ? '' : ' primary') + '" data-goto="' + x.goto + '">' + x.label + '</button>').join('') +
-      '</div></div>';
+      node.a.map(x => '<button type="button" class="btn" data-goto="' + x.goto + '">' + x.label + '</button>').join('') + '</div></div>';
   });
 
-  // Console probe for verification
+  // --- 13. Checklist score ---
+  const checks = document.querySelectorAll('#adoptChecklist input[type=checkbox]');
+  function score() {
+    let n = 0; checks.forEach(c => { if (c.checked) n += 1; });
+    document.getElementById('adoptScore').textContent = String(n);
+    let msg = '勾选已完成项。满分 10。分数是就绪提示，不是认证。';
+    if (n <= 3) msg = '就绪偏低：先完成沙箱、权限扩展与遥测策略。';
+    else if (n <= 6) msg = '部分就绪：适合受控试点；Durable 生产前补单写者与一致性测试。';
+    else if (n <= 9) msg = '较高就绪：仍建议做崩溃与 Breaking patch 升级演练。';
+    else msg = '清单项均已勾选：进入正式试点评审，并保留版本 pin 与演练节奏。';
+    document.getElementById('adoptMsg').textContent = msg;
+  }
+  checks.forEach(c => c.addEventListener('change', score));
+  score();
+
+  // probes
   window.__piBookReady = true;
+  window.__piBookVersion = 'v2';
   window.__piBookFigures = document.querySelectorAll('.fig').length;
   window.__piBookChapters = chapters.length;
 })();
